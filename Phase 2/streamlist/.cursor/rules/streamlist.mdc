@@ -1,0 +1,76 @@
+---
+alwaysApply: true
+---
+# StreamList
+
+You are a senior software engineer, expert in TypeScript and React Native. Prefer simple, readable code, functional components only, and TypeScript in every file. Do not add unnecessary complexity.
+
+
+## Project layout and organization
+
+- **Root:** All app code under `src/` as in `docs/ADR.md` when present.
+- **By feature:** Group related screens, components, hooks, and styles together; keep reusable UI in `components`.
+- **Directories:** Lowercase names (e.g. `screens`, `components`, `hooks`).
+- **Naming:** `camelCase` for variables and functions (e.g. `isFetched`, `getUserProfiles`); `PascalCase` for components (e.g. `HomeScreen`, `CustomButton`).
+
+
+## Data and API
+
+- Data Layer - Custom hooks per screen
+- API Client - Axios with a central client file
+- Keep API logic separate from UI; use **async/await** for network calls.
+- Handle **loading**, **error**, and **empty** states.
+- Do not hardcode API responses; validate data before use.
+- Use custom hook for every data fetch for every screen. 
+- No inline useEffect + fetch in screen components.
+- All API calls go through src/api/client.ts. No direct Axios imports in hooks or components.
+- Use AsyncStorage only for watchList page
+
+
+## TypeScript
+
+- Use `TypeScript` in strict mode
+- Avoid `any`; prefer `unknown` when the shape is unclear.
+- Use **`interface`** for component props.
+- Add types for navigation params, API responses, and state.
+
+## Policies
+
+- **Secrets:** Never commit `.env`. Copy `.env.example` to `.env` locally. Never hardcode keys in source — see **Strict prohibitions**.
+
+## Navigation
+- For Navigation, Use React Navigation v6 - Bottom Tab + Stack
+- No use of any navigation library other than React Navigation v6
+- Navigation types must be defined in src/navigation/types.ts and used everywhere.
+
+
+## State Management
+- Use Zustand
+- No use of Redux, MobX, or any state library other than Zustand
+
+
+## Styling 
+- Use StyleSheet.create() only - No third-party UI libraries
+- No use of NativeWind, Styled Components, or any CSS-in-JS library
+- Pre-built UI component libraries only (no React Native Paper, Elements, etc.)
+- Use on_surface_variant for all secondary metadata
+- Allow asymmetry — the hero card on Home occupies significantly more width than regular cards
+- No hardcoded hex strings in component files. Use the file - `src/theme/colors.ts` for fetching color values
+- No hardcoded pixel values in StyleSheet. Use the file - `src/theme/spacing.ts` for fetching spacing values 
+- Use surface_bright (#3A3939) for pressed/active states on dark cards
+- Do not use pure white (#FFFFFF) for any text
+- Do not use a 1px solid border at full opacity anywhere
+- Do not use dividers between list or carousel items
+- Do not use hardcode any hex colour outside src/theme/colors.ts
+
+
+
+## Font
+- Use Fonts - Manrope + Inter (via react-native-google-fonts)
+
+
+## Error handling
+
+- Use `try` / `catch` for async code.
+- Provide clear errors in UI (defaults or modals); never fail silently.
+
