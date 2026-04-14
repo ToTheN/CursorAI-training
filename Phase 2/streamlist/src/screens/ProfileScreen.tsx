@@ -11,8 +11,8 @@ import { typography } from '../theme/typography';
 export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <Text style={styles.label}>Profile</Text>
-      <Text style={styles.hint}>Placeholder</Text>
+      {/* <Text style={styles.label}>Profile</Text>
+      <Text style={styles.hint}>Placeholder</Text> */}
     </SafeAreaView>
   );
 }

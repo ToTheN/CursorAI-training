@@ -10,7 +10,7 @@ export function HomeScreen() {
   useHome();
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <Text style={styles.title}>Home</Text>
+      {/* <Text style={styles.title}>Home</Text> */}
     </SafeAreaView>
   );
 }

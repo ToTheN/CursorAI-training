@@ -10,7 +10,7 @@ export function SearchScreen() {
   useSearch();
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <Text style={styles.title}>Search</Text>
+      {/* <Text style={styles.title}>Search</Text> */}
     </SafeAreaView>
   );
 }

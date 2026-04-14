@@ -8,7 +8,7 @@ import { typography } from '../theme/typography';
 export function WatchlistScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <Text style={styles.title}>Watchlist</Text>
+      {/* <Text style={styles.title}>Watchlist</Text> */}
     </SafeAreaView>
   );
 }
