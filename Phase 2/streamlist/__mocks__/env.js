@@ -1,5 +1,5 @@
 module.exports = {
-  TMDB_API_KEY: 'test-key',
+  TMDB_ACCESS_TOKEN: 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3YzhhMjc5ZjVhMGU3ODc4ZGFmNmNiNDI3NzNiMjg1MSIsIm5iZiI6MTc3NTcyNjc3My42NjYsInN1YiI6IjY5ZDc3MGI1YmQwNWU0Yjk1YWQ3NzNmZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RwdBfRWcfQoEStOqO_PyUVwD51nIIRnMH2Ex_NoTN0w',
   TMDB_API_BASE_URL: 'https://api.themoviedb.org/3',
   TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p/',
 };

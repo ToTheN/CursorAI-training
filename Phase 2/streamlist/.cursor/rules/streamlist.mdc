@@ -25,6 +25,14 @@ You are a senior software engineer, expert in TypeScript and React Native. Prefe
 - No inline useEffect + fetch in screen components.
 - All API calls go through src/api/client.ts. No direct Axios imports in hooks or components.
 - Use AsyncStorage only for watchList page
+- Every data-fetching hook must return this consistent shape:
+
+        interface UseQueryResult<T> {
+        data: T | null;
+        loading: boolean;
+        error: string | null;
+        refetch: () => void;
+        }
 
 
 ## TypeScript

@@ -3,17 +3,14 @@
  */
 
 import React from 'react';
-import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StatusBar, StyleSheet, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StreamListLogo } from './src/components/StreamListLogo';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/colors';
 import { spacing } from './src/theme/spacing';
-import { typography } from './src/theme/typography';
 
-const APP_NAME_PASCAL: string = 'Streamlist';
-const movieIconSize: number = spacing.xl - 6;
 const notificationIconSize: number = spacing.lg;
 
 function App() {
@@ -29,18 +26,7 @@ function App() {
           accessibilityRole="header"
         >
           <View style={styles.appBarLeading}>
-            <MaterialIcons
-              name="movie-filter"
-              size={movieIconSize}
-              color={colors.primary_container}
-              accessibilityLabel="Movies"
-            />
-            <Text
-              style={styles.appBarTitle}
-              numberOfLines={1}
-            >
-              {APP_NAME_PASCAL}
-            </Text>
+            <StreamListLogo />
           </View>
           <Pressable
             accessibilityLabel="Notifications"
@@ -78,13 +64,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
-    gap: spacing.sm,
-  },
-  appBarTitle: {
-    ...typography.textStyle.titleLg,
-    fontSize: typography.textStyle.titleLg.fontSize + 6,
-    lineHeight: typography.textStyle.titleLg.lineHeight + 2,
-    color: colors.on_surface,
   },
   mainContent: {
     flex: 1,

@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
-export function WatchlistScreen() {
+function WatchlistBody(): React.ReactElement {
+  return (
+    <Text style={styles.placeholder}>Your watchlist will appear here.</Text>
+  );
+}
+
+export function WatchlistScreen(): React.ReactElement {
+  const refetch = useCallback((): void => {}, []);
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      {/* <Text style={styles.title}>Watchlist</Text> */}
+      <ScreenErrorBoundary onRetry={refetch}>
+        <WatchlistBody />
+      </ScreenErrorBoundary>
     </SafeAreaView>
   );
 }
@@ -19,10 +29,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.md,
   },
-  title: {
-    color: colors.on_surface,
-    fontFamily: typography.fontFamily.manropeSemiBold,
-    fontSize: typography.fontSize.xl,
-    lineHeight: typography.lineHeight.relaxed,
+  placeholder: {
+    ...typography.textStyle.bodyMd,
+    color: colors.on_surface_variant,
   },
 });

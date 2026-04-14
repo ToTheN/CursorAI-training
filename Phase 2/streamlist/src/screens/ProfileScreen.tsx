@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
-/**
- * Placeholder profile surface — extend when account/settings are in scope.
- */
-export function ProfileScreen() {
+function ProfileBody(): React.ReactElement {
+  return <Text style={styles.label}>Profile</Text>;
+}
+
+export function ProfileScreen(): React.ReactElement {
+  const refetch = useCallback((): void => {}, []);
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      {/* <Text style={styles.label}>Profile</Text>
-      <Text style={styles.hint}>Placeholder</Text> */}
+      <ScreenErrorBoundary onRetry={refetch}>
+        <ProfileBody />
+      </ScreenErrorBoundary>
     </SafeAreaView>
   );
 }
@@ -28,12 +32,5 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.manropeSemiBold,
     fontSize: typography.fontSize.lg,
     lineHeight: typography.lineHeight.relaxed,
-  },
-  hint: {
-    color: colors.on_surface_variant,
-    fontFamily: typography.fontFamily.interRegular,
-    fontSize: typography.fontSize.sm,
-    lineHeight: typography.lineHeight.normal,
-    marginTop: spacing.xs,
   },
 });
