@@ -1,13 +1,17 @@
-import { BlurView } from '@react-native-community/blur';
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import {
+  DefaultTheme,
+  NavigationContainer,
+  type NavigationContainerRefWithCurrent,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { DetailScreen } from '../screens/DetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { SeeAllScreen } from '../screens/SeeAllScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
@@ -18,18 +22,13 @@ import type { MainTabParamList, RootStackParamList } from './types';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/**
+ * Solid tab bar background only. BlurView was removed: on Android it can interact badly
+ * with react-native-screens native stack (dimmed overlay on pushed screens) while the
+ * visual was already covered by an opaque scrim.
+ */
 function TabBarBackground() {
-  return (
-    <View style={styles.tabBarBackgroundRoot}>
-      <BlurView
-        blurAmount={20}
-        blurType="dark"
-        reducedTransparencyFallbackColor={colors.surface_container}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={styles.tabBarOverlay} />
-    </View>
-  );
+  return <View style={styles.tabBarBackgroundRoot} />;
 }
 
 function renderTabBarBackground() {
@@ -43,7 +42,6 @@ const navigationTheme = {
     background: colors.surface,
     card: colors.surface,
     text: colors.on_surface,
-    border: colors.outline_variant,
     primary: colors.primary,
   },
 };
@@ -100,7 +98,7 @@ function MainTabs() {
         tabBarBackground: renderTabBarBackground,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: colors.primary_container,
-        tabBarInactiveTintColor: colors.on_surface_variant,
+        tabBarInactiveTintColor: colors.outline_secondaryvariant,
         tabBarLabelStyle: {
           textTransform: 'uppercase',
           fontFamily: typography.fontFamily.interSemiBold,
@@ -141,13 +139,26 @@ function RootStack() {
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Detail" component={DetailScreen} />
+      <Stack.Screen name="SeeAll" component={SeeAllScreen} />
     </Stack.Navigator>
   );
 }
 
-export function RootNavigator() {
+export interface RootNavigatorProps {
+  navigationRef?: NavigationContainerRefWithCurrent<RootStackParamList>;
+  onNavigationReady?: () => void;
+  onNavigationStateChange?: () => void;
+}
+
+export function RootNavigator(props: RootNavigatorProps) {
+  const { navigationRef, onNavigationReady, onNavigationStateChange } = props;
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer<RootStackParamList>
+      ref={navigationRef}
+      theme={navigationTheme}
+      onReady={onNavigationReady}
+      onStateChange={onNavigationStateChange}
+    >
       <RootStack />
     </NavigationContainer>
   );
@@ -163,13 +174,6 @@ const styles = StyleSheet.create({
   tabBarBackgroundRoot: {
     flex: 1,
     overflow: 'hidden',
-  },
-  tabBarOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
     backgroundColor: colors.surface,
   },
 });

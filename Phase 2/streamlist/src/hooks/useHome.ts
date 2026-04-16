@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  buildWithGenresOrParam,
   fetchDiscoverMovies,
   fetchMovieGenres,
   fetchTopRatedMovies,
@@ -10,21 +9,35 @@ import type { GenreListResponse, MovieListItem, PaginatedResponse } from '../api
 import { errorMessageFromUnknown } from './errorMessage';
 import type { UseQueryResult } from './types';
 
-/** `'all'` = discover with every genre id from `/genre/movie/list` (OR / pipe). */
+/** `'all'` = one discover rail per genre from `/genre/movie/list` (separate API calls). */
 export type HomeGenreSelection = 'all' | number;
+
+export interface DiscoverGenreRail {
+  genreId: number;
+  genreName: string;
+  discover: PaginatedResponse<MovieListItem>;
+}
 
 export interface HomeScreenData {
   trending: PaginatedResponse<MovieListItem>;
   topRated: PaginatedResponse<MovieListItem>;
   genres: GenreListResponse;
-  discoverByGenre: PaginatedResponse<MovieListItem>;
+  /** Set when a single genre is selected (not `"all"`). */
+  discoverByGenre: PaginatedResponse<MovieListItem> | null;
+  /** Set when `"all"` is selected — one discover response per genre id. */
+  discoverRails: DiscoverGenreRail[];
+  /** Show the Trending row only when its API succeeded with at least one movie. */
+  hasTrendingRail: boolean;
+  /** Show the Top rated row only when its API succeeded with at least one movie. */
+  hasTopRatedRail: boolean;
 }
 
 export interface UseHomeResult extends UseQueryResult<HomeScreenData> {
   loadingMoreDiscover: boolean;
   loadingMoreTrending: boolean;
   loadingMoreTopRated: boolean;
-  loadMoreDiscover: () => Promise<void>;
+  /** For a single-genre rail, omit `genreId`. For `"all"` mode, pass the rail’s `genreId`. */
+  loadMoreDiscover: (genreId?: number) => Promise<void>;
   loadMoreTrending: () => Promise<void>;
   loadMoreTopRated: () => Promise<void>;
 }
@@ -35,6 +48,28 @@ function mergeMovieResults(existing: MovieListItem[], next: MovieListItem[]): Mo
   return existing.concat(appended);
 }
 
+function emptyPaginatedMovies(): PaginatedResponse<MovieListItem> {
+  return {
+    page: 1,
+    results: [],
+    total_pages: 0,
+    total_results: 0,
+  };
+}
+
+function emptyGenres(): GenreListResponse {
+  return { genres: [] };
+}
+
+function hasSuccessfulMovieData(
+  settled: PromiseSettledResult<PaginatedResponse<MovieListItem>>,
+): boolean {
+  return (
+    settled.status === 'fulfilled'
+    && settled.value.results.length > 0
+  );
+}
+
 export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
   const [data, setData] = useState<HomeScreenData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,27 +78,99 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
   const [loadingMoreTrending, setLoadingMoreTrending] = useState<boolean>(false);
   const [loadingMoreTopRated, setLoadingMoreTopRated] = useState<boolean>(false);
   const [discoverWithGenres, setDiscoverWithGenres] = useState<number | string | undefined>(undefined);
-  const discoverLoadInFlightRef = useRef<boolean>(false);
+  const discoverSingleLoadInFlightRef = useRef<boolean>(false);
+  const discoverMultiLoadInFlightRef = useRef<Set<number>>(new Set());
   const trendingLoadInFlightRef = useRef<boolean>(false);
   const topRatedLoadInFlightRef = useRef<boolean>(false);
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const [trending, topRated, genresResponse] = await Promise.all([
+      const initialSettled: [
+        PromiseSettledResult<PaginatedResponse<MovieListItem>>,
+        PromiseSettledResult<PaginatedResponse<MovieListItem>>,
+        PromiseSettledResult<GenreListResponse>,
+      ] = await Promise.allSettled([
         fetchTrendingMoviesWeek(1),
         fetchTopRatedMovies(1),
         fetchMovieGenres(),
       ]);
-      const withGenres: number | string | undefined =
-        selectedGenreKey === 'all'
-          ? genresResponse.genres.length > 0
-            ? buildWithGenresOrParam(genresResponse.genres)
-            : undefined
-          : selectedGenreKey;
-      setDiscoverWithGenres(withGenres);
-      const discoverByGenre: PaginatedResponse<MovieListItem> = await fetchDiscoverMovies(withGenres);
-      setData({ trending, topRated, genres: genresResponse, discoverByGenre });
+      const trending: PaginatedResponse<MovieListItem> =
+        initialSettled[0].status === 'fulfilled' ? initialSettled[0].value : emptyPaginatedMovies();
+      const topRated: PaginatedResponse<MovieListItem> =
+        initialSettled[1].status === 'fulfilled' ? initialSettled[1].value : emptyPaginatedMovies();
+      const genresResponse: GenreListResponse =
+        initialSettled[2].status === 'fulfilled' ? initialSettled[2].value : emptyGenres();
+      const hasTrendingRail: boolean = hasSuccessfulMovieData(initialSettled[0]);
+      const hasTopRatedRail: boolean = hasSuccessfulMovieData(initialSettled[1]);
+      const anyInitialSuccess: boolean = initialSettled.some(
+        (r: PromiseSettledResult<unknown>): boolean => r.status === 'fulfilled',
+      );
+      if (!anyInitialSuccess) {
+        const firstRejected: PromiseRejectedResult | undefined = initialSettled.find(
+          (r: PromiseSettledResult<unknown>): r is PromiseRejectedResult => r.status === 'rejected',
+        );
+        setError(errorMessageFromUnknown(firstRejected?.reason));
+        setData(null);
+        return;
+      }
+      if (selectedGenreKey === 'all') {
+        setDiscoverWithGenres(undefined);
+        const discoverRails: DiscoverGenreRail[] =
+          genresResponse.genres.length > 0
+            ? (
+                await Promise.all(
+                  genresResponse.genres.map(
+                    async (g: { id: number; name: string }): Promise<DiscoverGenreRail | null> => {
+                      try {
+                        const discover: PaginatedResponse<MovieListItem> = await fetchDiscoverMovies(g.id);
+                        if (discover.results.length === 0) {
+                          return null;
+                        }
+                        return { genreId: g.id, genreName: g.name, discover };
+                      } catch {
+                        return null;
+                      }
+                    },
+                  ),
+                )
+              )
+                .filter((r: DiscoverGenreRail | null): r is DiscoverGenreRail => r !== null)
+                .sort((a: DiscoverGenreRail, b: DiscoverGenreRail) =>
+                  a.genreName.localeCompare(b.genreName),
+                )
+            : [];
+        setData({
+          trending,
+          topRated,
+          genres: genresResponse,
+          discoverByGenre: null,
+          discoverRails,
+          hasTrendingRail,
+          hasTopRatedRail,
+        });
+      } else {
+        const withGenres: number = selectedGenreKey;
+        setDiscoverWithGenres(withGenres);
+        let discoverByGenre: PaginatedResponse<MovieListItem> | null = null;
+        try {
+          const discover: PaginatedResponse<MovieListItem> = await fetchDiscoverMovies(withGenres);
+          if (discover.results.length > 0) {
+            discoverByGenre = discover;
+          }
+        } catch {
+          discoverByGenre = null;
+        }
+        setData({
+          trending,
+          topRated,
+          genres: genresResponse,
+          discoverByGenre,
+          discoverRails: [],
+          hasTrendingRail,
+          hasTopRatedRail,
+        });
+      }
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
       setData(null);
@@ -77,15 +184,65 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
   const refetch = useCallback((): void => {
     load().catch(() => undefined);
   }, [load]);
-  const loadMoreDiscover = useCallback(async (): Promise<void> => {
-    if (data === null || discoverLoadInFlightRef.current) {
+  const loadMoreDiscover = useCallback(async (genreId?: number): Promise<void> => {
+    if (data === null) {
+      return;
+    }
+    if (data.discoverRails.length > 0) {
+      if (genreId === undefined) {
+        return;
+      }
+      if (discoverMultiLoadInFlightRef.current.has(genreId)) {
+        return;
+      }
+      const rail: DiscoverGenreRail | undefined = data.discoverRails.find(
+        (r: DiscoverGenreRail) => r.genreId === genreId,
+      );
+      if (rail === undefined || rail.discover.page >= rail.discover.total_pages) {
+        return;
+      }
+      discoverMultiLoadInFlightRef.current.add(genreId);
+      setLoadingMoreDiscover(true);
+      try {
+        const nextPage: number = rail.discover.page + 1;
+        const response: PaginatedResponse<MovieListItem> = await fetchDiscoverMovies(genreId, nextPage);
+        setData((prev: HomeScreenData | null): HomeScreenData | null => {
+          if (prev === null) {
+            return null;
+          }
+          return {
+            ...prev,
+            discoverRails: prev.discoverRails.map((r: DiscoverGenreRail) =>
+              r.genreId === genreId
+                ? {
+                    ...r,
+                    discover: {
+                      page: response.page,
+                      total_pages: response.total_pages,
+                      total_results: response.total_results,
+                      results: mergeMovieResults(r.discover.results, response.results),
+                    },
+                  }
+                : r,
+            ),
+          };
+        });
+      } catch (err: unknown) {
+        setError(errorMessageFromUnknown(err));
+      } finally {
+        discoverMultiLoadInFlightRef.current.delete(genreId);
+        setLoadingMoreDiscover(false);
+      }
+      return;
+    }
+    if (data.discoverByGenre === null || discoverSingleLoadInFlightRef.current) {
       return;
     }
     const current: PaginatedResponse<MovieListItem> = data.discoverByGenre;
     if (current.page >= current.total_pages) {
       return;
     }
-    discoverLoadInFlightRef.current = true;
+    discoverSingleLoadInFlightRef.current = true;
     setLoadingMoreDiscover(true);
     try {
       const nextPage: number = current.page + 1;
@@ -94,8 +251,8 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
         nextPage,
       );
       setData((prev: HomeScreenData | null): HomeScreenData | null => {
-        if (prev === null) {
-          return null;
+        if (prev === null || prev.discoverByGenre === null) {
+          return prev;
         }
         return {
           ...prev,
@@ -110,7 +267,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
     } finally {
-      discoverLoadInFlightRef.current = false;
+      discoverSingleLoadInFlightRef.current = false;
       setLoadingMoreDiscover(false);
     }
   }, [data, discoverWithGenres]);

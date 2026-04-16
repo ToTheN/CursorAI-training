@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches src/theme/colors.ts surface (#131313) -->
+    <color name="surface">#131313</color>
+    <color name="ic_launcher_background">#131313</color>
+    <!-- Matches src/theme/colors.ts primary_container -->
+    <color name="primary_container">#FF5351</color>
+</resources>

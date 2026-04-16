@@ -1,4 +1,13 @@
 import { spacing } from '../theme/spacing';
+import { typography } from '../theme/typography';
+
+/**
+ * Matches `ContentCard` copy block min height (two title lines + two subtitle lines).
+ */
+const CARD_COPY_BLOCK_HEIGHT: number =
+  typography.textStyle.titleLg.lineHeight * 2 +
+  spacing.xxs +
+  typography.textStyle.labelSm.lineHeight * 2;
 
 /**
  * Horizontal gap between cards in home carousel rows.
@@ -24,4 +33,14 @@ export function homeContentCardOuterWidth(windowWidth: number): number {
   const widthPerCard: number = Math.floor((contentWidth - HOME_HORIZONTAL_CARD_GAP) / 2);
   const minWidth: number = spacing.xl * 2;
   return Math.max(widthPerCard, minWidth);
+}
+
+/**
+ * Approximate height of one grid row (poster + title block + spacing) for vertical
+ * infinite-scroll thresholds on the See All screen (two columns, same card width as home).
+ */
+export function seeAllGridRowStride(outerCardWidth: number): number {
+  return (
+    posterFrameHeightFromOuterWidth(outerCardWidth) + spacing.xs + CARD_COPY_BLOCK_HEIGHT + spacing.md
+  );
 }

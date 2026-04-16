@@ -23,3 +23,25 @@ export function shouldLoadMoreMoviesRow(
   const thresholdPx: number = ITEMS_FROM_END_THRESHOLD * itemStride;
   return distanceFromEnd <= thresholdPx;
 }
+
+/**
+ * Returns true when vertical scroll is within `ITEMS_FROM_END_THRESHOLD` row heights of the end.
+ */
+export function shouldLoadMoreVerticalList(
+  event: NativeScrollEvent,
+  rowStride: number,
+  itemCount: number,
+): boolean {
+  if (itemCount === 0 || rowStride <= 0) {
+    return false;
+  }
+  const { contentOffset, layoutMeasurement, contentSize } = event;
+  const scrollable: number = contentSize.height - layoutMeasurement.height;
+  if (scrollable <= 0) {
+    return false;
+  }
+  const distanceFromEnd: number =
+    contentSize.height - layoutMeasurement.height - contentOffset.y;
+  const thresholdPx: number = ITEMS_FROM_END_THRESHOLD * rowStride;
+  return distanceFromEnd <= thresholdPx;
+}

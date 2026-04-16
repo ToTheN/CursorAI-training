@@ -19,9 +19,9 @@ import { ContentCard } from '../components/ContentCard';
 import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
 import { ScreenErrorFallback } from '../components/ScreenErrorFallback';
 import { HomeScreenSkeleton } from '../components/skeletons/HomeScreenSkeleton';
-import type { HomeGenreSelection, UseHomeResult } from '../hooks/useHome';
+import type { DiscoverGenreRail, HomeGenreSelection, UseHomeResult } from '../hooks/useHome';
 import { useHome } from '../hooks/useHome';
-import type { MainTabParamList, RootStackParamList } from '../navigation/types';
+import type { MainTabParamList, RootStackParamList, SeeAllScreenParams } from '../navigation/types';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
@@ -43,6 +43,12 @@ interface HomeScreenContentProps {
 
 function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const navigateToSeeAll = useCallback(
+    (params: SeeAllScreenParams): void => {
+      navigation.push('SeeAll', params);
+    },
+    [navigation],
+  );
   const { width: windowWidth } = useWindowDimensions();
   const contentCardWidth: number = useMemo(
     (): number => homeContentCardOuterWidth(windowWidth),
@@ -66,8 +72,18 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
     return [...data.genres.genres].sort((a: Genre, b: Genre) => a.name.localeCompare(b.name));
   }, [data]);
   const discoverResults: MovieListItem[] = data?.discoverByGenre?.results ?? [];
+  const visibleDiscoverRails: DiscoverGenreRail[] = useMemo((): DiscoverGenreRail[] => {
+    const rails: DiscoverGenreRail[] = data?.discoverRails ?? [];
+    return rails.filter(
+      (rail: DiscoverGenreRail): boolean => rail.discover.results.length > 0,
+    );
+  }, [data]);
   const trendingResults: MovieListItem[] = data?.trending?.results ?? [];
   const topRatedResults: MovieListItem[] = data?.topRated?.results ?? [];
+  const showTrendingRail: boolean =
+    (data?.hasTrendingRail ?? false) && trendingResults.length > 0;
+  const showTopRatedRail: boolean =
+    (data?.hasTopRatedRail ?? false) && topRatedResults.length > 0;
   const onDiscoverRowScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>): void => {
       if (
@@ -78,6 +94,16 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
       loadMoreDiscover().catch(() => undefined);
     },
     [discoverResults.length, loadMoreDiscover, movieRowItemStride],
+  );
+  const onDiscoverRailScroll = useCallback(
+    (genreId: number, resultCount: number) =>
+      (event: NativeSyntheticEvent<NativeScrollEvent>): void => {
+        if (!shouldLoadMoreMoviesRow(event.nativeEvent, movieRowItemStride, resultCount)) {
+          return;
+        }
+        loadMoreDiscover(genreId).catch(() => undefined);
+      },
+    [loadMoreDiscover, movieRowItemStride],
   );
   const onTrendingRowScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>): void => {
@@ -169,17 +195,125 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
           );
         })}
       </ScrollView>
-      {discoverResults.length > 0 && discoverSectionTitle.length > 0 ? (
+      {selectedGenreKey === 'all' && visibleDiscoverRails.length > 0
+        ? visibleDiscoverRails.map((rail: DiscoverGenreRail) => (
+              <React.Fragment key={rail.genreId}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitleInRow} numberOfLines={1}>
+                    {rail.genreName}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="See all in this section"
+                    onPress={(): void => {
+                      navigateToSeeAll({
+                        rail: 'discover',
+                        screenTitle: rail.genreName,
+                        discoverGenreKey: rail.genreId,
+                      });
+                    }}
+                    style={({ pressed }) => [styles.seeAllPressable, pressed && styles.seeAllPressed]}
+                  >
+                    <Text style={styles.seeAllLink}>See All</Text>
+                  </Pressable>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalRow}
+                  scrollEventThrottle={16}
+                  onScroll={onDiscoverRailScroll(rail.genreId, rail.discover.results.length)}
+                >
+                  {rail.discover.results.map((item: MovieListItem) => (
+                    <ContentCard
+                      key={item.id}
+                      title={item.title}
+                      subtitle={buildMovieCardSubtitle(item, genreList)}
+                      imageUri={buildImageUrl(item.poster_path, IMAGE_SIZE_CARD)}
+                      showRating
+                      ratingValue={item.vote_average}
+                      onPress={(): void => {
+                        onOpenMovie(item);
+                      }}
+                      layoutWidth={contentCardWidth}
+                      style={{ width: contentCardWidth }}
+                    />
+                  ))}
+                </ScrollView>
+              </React.Fragment>
+            ))
+        : discoverResults.length > 0 && discoverSectionTitle.length > 0 ? (
+            <>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitleInRow} numberOfLines={1}>
+                  {discoverSectionTitle}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="See all in this section"
+                  onPress={(): void => {
+                    navigateToSeeAll({
+                      rail: 'discover',
+                      screenTitle: discoverSectionTitle,
+                      discoverGenreKey: selectedGenreKey,
+                    });
+                  }}
+                  style={({ pressed }) => [styles.seeAllPressable, pressed && styles.seeAllPressed]}
+                >
+                  <Text style={styles.seeAllLink}>See All</Text>
+                </Pressable>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalRow}
+                scrollEventThrottle={16}
+                onScroll={onDiscoverRowScroll}
+              >
+                {discoverResults.map((item: MovieListItem) => (
+                  <ContentCard
+                    key={item.id}
+                    title={item.title}
+                    subtitle={buildMovieCardSubtitle(item, genreList)}
+                    imageUri={buildImageUrl(item.poster_path, IMAGE_SIZE_CARD)}
+                    showRating
+                    ratingValue={item.vote_average}
+                    onPress={(): void => {
+                      onOpenMovie(item);
+                    }}
+                    layoutWidth={contentCardWidth}
+                    style={{ width: contentCardWidth }}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          ) : null}
+      {showTrendingRail ? (
         <>
-          <Text style={styles.sectionTitle}>{discoverSectionTitle}</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitleInRow}>Trending</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="See all trending movies"
+              onPress={(): void => {
+                navigateToSeeAll({
+                  rail: 'trending',
+                  screenTitle: 'Trending',
+                });
+              }}
+              style={({ pressed }) => [styles.seeAllPressable, pressed && styles.seeAllPressed]}
+            >
+              <Text style={styles.seeAllLink}>See All</Text>
+            </Pressable>
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalRow}
             scrollEventThrottle={16}
-            onScroll={onDiscoverRowScroll}
+            onScroll={onTrendingRowScroll}
           >
-            {discoverResults.map((item: MovieListItem) => (
+            {trendingResults.map((item: MovieListItem) => (
               <ContentCard
                 key={item.id}
                 title={item.title}
@@ -197,54 +331,49 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
           </ScrollView>
         </>
       ) : null}
-      <Text style={styles.sectionTitle}>Trending</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalRow}
-        scrollEventThrottle={16}
-        onScroll={onTrendingRowScroll}
-      >
-        {trendingResults.map((item: MovieListItem) => (
-          <ContentCard
-            key={item.id}
-            title={item.title}
-            subtitle={buildMovieCardSubtitle(item, genreList)}
-            imageUri={buildImageUrl(item.poster_path, IMAGE_SIZE_CARD)}
-            showRating
-            ratingValue={item.vote_average}
-            onPress={(): void => {
-              onOpenMovie(item);
-            }}
-            layoutWidth={contentCardWidth}
-            style={{ width: contentCardWidth }}
-          />
-        ))}
-      </ScrollView>
-      <Text style={[styles.sectionTitle, styles.sectionSpaced]}>Top rated</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalRow}
-        scrollEventThrottle={16}
-        onScroll={onTopRatedRowScroll}
-      >
-        {topRatedResults.map((item: MovieListItem) => (
-          <ContentCard
-            key={item.id}
-            title={item.title}
-            subtitle={buildMovieCardSubtitle(item, genreList)}
-            imageUri={buildImageUrl(item.poster_path, IMAGE_SIZE_CARD)}
-            showRating
-            ratingValue={item.vote_average}
-            onPress={(): void => {
-              onOpenMovie(item);
-            }}
-            layoutWidth={contentCardWidth}
-            style={{ width: contentCardWidth }}
-          />
-        ))}
-      </ScrollView>
+      {showTopRatedRail ? (
+        <>
+          <View style={[styles.sectionHeaderRow, styles.sectionSpaced]}>
+            <Text style={styles.sectionTitleInRow}>Top rated</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="See all top rated movies"
+              onPress={(): void => {
+                navigateToSeeAll({
+                  rail: 'topRated',
+                  screenTitle: 'Top rated',
+                });
+              }}
+              style={({ pressed }) => [styles.seeAllPressable, pressed && styles.seeAllPressed]}
+            >
+              <Text style={styles.seeAllLink}>See All</Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalRow}
+            scrollEventThrottle={16}
+            onScroll={onTopRatedRowScroll}
+          >
+            {topRatedResults.map((item: MovieListItem) => (
+              <ContentCard
+                key={item.id}
+                title={item.title}
+                subtitle={buildMovieCardSubtitle(item, genreList)}
+                imageUri={buildImageUrl(item.poster_path, IMAGE_SIZE_CARD)}
+                showRating
+                ratingValue={item.vote_average}
+                onPress={(): void => {
+                  onOpenMovie(item);
+                }}
+                layoutWidth={contentCardWidth}
+                style={{ width: contentCardWidth }}
+              />
+            ))}
+          </ScrollView>
+        </>
+      ) : null}
     </ScrollView>
   );
 }
@@ -256,7 +385,7 @@ export function HomeScreen(): React.ReactElement {
     setSelectedGenreKey(key);
   };
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.root} edges={['left', 'right']}>
       <ScreenErrorBoundary onRetry={home.refetch}>
         <HomeScreenContent
           home={home}
@@ -308,9 +437,28 @@ const styles = StyleSheet.create({
     ...typography.textStyle.titleSm,
     color: colors.on_surface_variant,
   },
-  sectionTitle: {
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  sectionTitleInRow: {
     ...typography.textStyle.headlineMd,
     color: colors.on_surface,
+    flexShrink: 1,
+  },
+  seeAllPressable: {
+    flexShrink: 0,
+  },
+  seeAllPressed: {
+    opacity: 0.88,
+  },
+  seeAllLink: {
+    fontFamily: typography.fontFamily.interMedium,
+    fontSize: typography.fontSize.sm,
+    lineHeight: typography.lineHeight.tight,
+    color: colors.on_surface_variant,
   },
   sectionSpaced: {
     marginTop: spacing.sm,

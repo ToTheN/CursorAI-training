@@ -22,6 +22,8 @@ export const colors = {
 
   // Utility
   outline_variant:           'rgba(255,255,255,0.15)', // Ghost borders (accessibility only)
+  outline_secondaryvariant:  'rgba(255, 255, 255, 0.44)', // Ghost borders (accessibility only)
+
 
   /** Bottom tab bar: scrim over BlurView */
   tab_bar_overlay:           'rgba(35, 35, 35, 0.70)',

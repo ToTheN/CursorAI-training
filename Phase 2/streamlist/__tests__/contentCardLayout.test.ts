@@ -3,6 +3,7 @@ import {
   HOME_HORIZONTAL_CARD_GAP,
   homeContentCardOuterWidth,
   posterFrameHeightFromOuterWidth,
+  seeAllGridRowStride,
 } from '../src/utils/contentCardLayout';
 
 describe('posterFrameHeightFromOuterWidth', () => {
@@ -23,5 +24,13 @@ describe('homeContentCardOuterWidth', () => {
   it('respects minimum card width on very narrow layouts', () => {
     const w: number = homeContentCardOuterWidth(120);
     expect(w).toBeGreaterThanOrEqual(spacing.xl * 2);
+  });
+});
+
+describe('seeAllGridRowStride', () => {
+  it('is greater than poster height alone', () => {
+    const outer: number = 100;
+    const posterH: number = posterFrameHeightFromOuterWidth(outer);
+    expect(seeAllGridRowStride(outer)).toBeGreaterThan(posterH);
   });
 });
