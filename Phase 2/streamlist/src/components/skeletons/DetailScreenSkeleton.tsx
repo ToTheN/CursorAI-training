@@ -1,42 +1,55 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ShimmerPlaceholder } from '../ShimmerPlaceholder';
+import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 
-const BACKDROP_HEIGHT: number = spacing.xl * 8;
-const POSTER_WIDTH: number = spacing.xl * 4;
-const POSTER_HEIGHT: number = spacing.xl * 6;
-const SIMILAR_POSTER_WIDTH: number = spacing.xl * 2 + spacing.md;
-const SIMILAR_POSTER_HEIGHT: number = spacing.xl * 4;
+const CAST_SCROLL_GAP: number = spacing.md;
 
 /**
- * Backdrop, poster + text column, synopsis block, similar-movies row.
+ * Detail loading: full-bleed hero, title, metadata chips, watchlist, synopsis, cast row, similar row.
  */
-export function DetailScreenSkeleton() {
+export function DetailScreenSkeleton(): React.ReactElement {
   return (
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
-      <ShimmerPlaceholder style={styles.backdrop} />
-      <View style={styles.mainRow}>
-        <ShimmerPlaceholder style={styles.poster} />
-        <View style={styles.textColumn}>
-          <ShimmerPlaceholder style={styles.titleLine} />
-          <ShimmerPlaceholder style={styles.metaLine} />
-          <ShimmerPlaceholder style={styles.metaLineShort} />
+      <ShimmerPlaceholder style={styles.hero} />
+      <View style={styles.padded}>
+        <ShimmerPlaceholder style={styles.titleLine} />
+        <View style={styles.chipRow}>
+          <ShimmerPlaceholder style={styles.chip} />
+          <ShimmerPlaceholder style={styles.chip} />
+          <ShimmerPlaceholder style={styles.chipShort} />
         </View>
-      </View>
-      <ShimmerPlaceholder style={styles.bodyLine} />
-      <ShimmerPlaceholder style={styles.bodyLine} />
-      <ShimmerPlaceholder style={styles.bodyLineShort} />
-      <ShimmerPlaceholder style={styles.sectionLabel} />
-      <View style={styles.similarRow}>
-        <ShimmerPlaceholder style={styles.similarPoster} />
-        <ShimmerPlaceholder style={styles.similarPoster} />
-        <ShimmerPlaceholder style={styles.similarPoster} />
-        <ShimmerPlaceholder style={styles.similarPoster} />
+        <ShimmerPlaceholder style={styles.watchlist} />
+        <ShimmerPlaceholder style={styles.sectionHeading} />
+        <ShimmerPlaceholder style={styles.bodyLine} />
+        <ShimmerPlaceholder style={styles.bodyLine} />
+        <ShimmerPlaceholder style={styles.bodyLineShort} />
+        <ShimmerPlaceholder style={styles.sectionHeading} />
+        <View style={styles.castRow}>
+          {Array.from({ length: 5 }).map((_, index: number) => (
+            <View key={`cast-skel-${String(index)}`} style={styles.castItem}>
+              <ShimmerPlaceholder style={styles.castAvatar} />
+              <ShimmerPlaceholder style={styles.castLine} />
+              <ShimmerPlaceholder style={styles.castLineShort} />
+            </View>
+          ))}
+        </View>
+        <View style={styles.moreLikeHeader}>
+          <ShimmerPlaceholder style={styles.moreLikeTitle} />
+          <ShimmerPlaceholder style={styles.seeAll} />
+        </View>
+        <View style={styles.similarRow}>
+          <ShimmerPlaceholder style={styles.similarPoster} />
+          <ShimmerPlaceholder style={styles.similarPoster} />
+          <ShimmerPlaceholder style={styles.similarPoster} />
+        </View>
       </View>
     </ScrollView>
   );
@@ -45,69 +58,111 @@ export function DetailScreenSkeleton() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
+    minHeight: 0,
+    backgroundColor: colors.surface,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: spacing.xl,
-    gap: spacing.md,
+    backgroundColor: colors.surface,
   },
-  backdrop: {
+  hero: {
     width: '100%',
-    height: BACKDROP_HEIGHT,
-    borderRadius: spacing.sm,
+    height: spacing.detailHeroBackdrop,
+    borderRadius: 0,
   },
-  mainRow: {
-    flexDirection: 'row',
+  padded: {
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
-  },
-  poster: {
-    width: POSTER_WIDTH,
-    height: POSTER_HEIGHT,
-    borderRadius: spacing.xs,
-  },
-  textColumn: {
-    flex: 1,
-    gap: spacing.sm,
-    justifyContent: 'flex-start',
-    paddingTop: spacing.xs,
+    marginTop: spacing.sm,
   },
   titleLine: {
-    height: spacing.lg + spacing.xs,
+    height: typography.textStyle.displayMd.lineHeight,
+    width: '85%',
+    borderRadius: spacing.xs,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  chip: {
+    height: spacing.lg,
+    width: spacing.xxl + spacing.md,
+    borderRadius: spacing.xl,
+  },
+  chipShort: {
+    height: spacing.lg,
+    width: spacing.xl,
+    borderRadius: spacing.xl,
+  },
+  watchlist: {
+    height: spacing.xl + spacing.sm,
     width: '100%',
-    borderRadius: spacing.xs,
+    borderRadius: spacing.md,
   },
-  metaLine: {
-    height: spacing.md,
-    width: '70%',
-    borderRadius: spacing.xs,
-  },
-  metaLineShort: {
-    height: spacing.md,
-    width: '50%',
+  sectionHeading: {
+    height: typography.textStyle.headlineMd.lineHeight,
+    width: '45%',
     borderRadius: spacing.xs,
   },
   bodyLine: {
-    height: spacing.sm + spacing.xs,
+    height: typography.textStyle.bodyMd.lineHeight,
     width: '100%',
     borderRadius: spacing.xs,
   },
   bodyLineShort: {
-    height: spacing.sm + spacing.xs,
-    width: '65%',
+    height: typography.textStyle.bodyMd.lineHeight,
+    width: '70%',
     borderRadius: spacing.xs,
   },
-  sectionLabel: {
-    height: spacing.lg,
-    width: '40%',
+  castRow: {
+    flexDirection: 'row',
+    gap: CAST_SCROLL_GAP,
+    paddingVertical: spacing.xs,
+  },
+  castItem: {
+    width: spacing.castAvatar + spacing.lg,
+    gap: spacing.xs,
+  },
+  castAvatar: {
+    width: spacing.castAvatar,
+    height: spacing.castAvatar,
+    borderRadius: spacing.castAvatar / 2,
+  },
+  castLine: {
+    height: spacing.sm,
     borderRadius: spacing.xs,
-    marginTop: spacing.sm,
+  },
+  castLineShort: {
+    height: spacing.sm,
+    width: '70%',
+    borderRadius: spacing.xs,
+  },
+  moreLikeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  moreLikeTitle: {
+    height: typography.textStyle.headlineMd.lineHeight,
+    width: '55%',
+    borderRadius: spacing.xs,
+  },
+  seeAll: {
+    height: spacing.md,
+    width: spacing.xxl,
+    borderRadius: spacing.xs,
   },
   similarRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.xxl,
+    paddingVertical: spacing.xs,
   },
   similarPoster: {
-    width: SIMILAR_POSTER_WIDTH,
-    height: SIMILAR_POSTER_HEIGHT,
-    borderRadius: spacing.xs,
+    width: spacing.xl * 4,
+    height: spacing.xl * 6,
+    borderRadius: spacing.md,
   },
 });

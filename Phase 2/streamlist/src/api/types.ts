@@ -40,6 +40,8 @@ export interface GenreListResponse {
 export interface MovieDetails {
   title: string;
   backdrop_path: string | null;
+  /** Used when backdrop is missing (hero fallback). */
+  poster_path: string | null;
   vote_average: number;
   release_date: string;
   genres: Genre[];
@@ -57,8 +59,27 @@ export interface MovieCredits {
   cast: CastMember[];
 }
 
-export interface SimilarMovieItem {
-  id: number;
-  title: string;
+/** TMDB `/movie/{id}/similar` rows match discover list items. */
+export type SimilarMovieItem = MovieListItem;
+
+/** TMDB `/tv/{id}` detail subset used by the watchlist. */
+export interface TvDetails {
+  name: string;
   poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  first_air_date: string;
+  genres: Genre[];
+  overview: string;
+}
+
+/** TMDB TV list row (discover / similar). */
+export interface TvListItem {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  first_air_date: string;
+  genre_ids: number[];
 }

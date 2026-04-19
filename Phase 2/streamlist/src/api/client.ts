@@ -21,6 +21,18 @@ export function isNormalizedApiError(value: unknown): value is NormalizedApiErro
   return typeof candidate.message === 'string' && typeof candidate.status === 'number';
 }
 
+/** True when the failure was an in-flight request aborted via `AbortController` / Axios cancel. */
+export function isNormalizedCancelError(value: unknown): boolean {
+  if (!isNormalizedApiError(value)) {
+    return false;
+  }
+  const messageLower: string = value.message.toLowerCase();
+  return (
+    value.status === 0 &&
+    (messageLower.includes('cancel') || messageLower.includes('abort'))
+  );
+}
+
 function extractMessageFromResponseData(data: unknown): string | null {
   if (typeof data === 'string' && data.length > 0) {
     return data;
@@ -63,13 +75,21 @@ const resolvedBaseUrl: string =
 const hasAccessToken: boolean =
   typeof TMDB_ACCESS_TOKEN === 'string' && TMDB_ACCESS_TOKEN.length > 0;
 
-/** Default instance headers carry Bearer auth; hooks do not set Authorization per call. */
 export const apiClient = axios.create({
   baseURL: resolvedBaseUrl,
   timeout: 20000,
-  ...(hasAccessToken
-    ? { headers: { Authorization: `Bearer ${TMDB_ACCESS_TOKEN}` } }
-    : {}),
+});
+
+/**
+ * TMDB auth must be applied on every outgoing request. Relying only on `axios.create({ headers })`
+ * can miss merges in some Axios 1.x code paths; a request interceptor matches project rules and
+ * keeps Authorization consistent (including for retries).
+ */
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (hasAccessToken && config.headers !== undefined) {
+    config.headers.set('Authorization', `Bearer ${TMDB_ACCESS_TOKEN}`);
+  }
+  return config;
 });
 
 apiClient.interceptors.response.use(

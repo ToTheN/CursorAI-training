@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Genre, MovieListItem } from '../api/types';
 import { ContentCard } from '../components/ContentCard';
+import { GlobalAppBar } from '../components/GlobalAppBar';
 import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
 import { ScreenErrorFallback } from '../components/ScreenErrorFallback';
 import { HomeScreenSkeleton } from '../components/skeletons/HomeScreenSkeleton';
@@ -60,6 +61,7 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
     data,
     loading,
     error,
+    errorKind,
     refetch,
     loadMoreDiscover,
     loadMoreTrending,
@@ -128,7 +130,12 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
     [loadMoreTopRated, topRatedResults.length, movieRowItemStride],
   );
   if (error !== null) {
-    return <ScreenErrorFallback onTryAgain={refetch} />;
+    return (
+      <ScreenErrorFallback
+        reason={errorKind === 'network' ? 'network' : 'generic'}
+        onTryAgain={refetch}
+      />
+    );
   }
   if (loading || data === null) {
     return <HomeScreenSkeleton />;
@@ -385,19 +392,26 @@ export function HomeScreen(): React.ReactElement {
     setSelectedGenreKey(key);
   };
   return (
-    <SafeAreaView style={styles.root} edges={['left', 'right']}>
-      <ScreenErrorBoundary onRetry={home.refetch}>
-        <HomeScreenContent
-          home={home}
-          selectedGenreKey={selectedGenreKey}
-          onSelectGenre={onSelectGenre}
-        />
-      </ScreenErrorBoundary>
-    </SafeAreaView>
+    <View style={styles.screenWrap}>
+      <GlobalAppBar />
+      <SafeAreaView style={styles.root} edges={['left', 'right']}>
+        <ScreenErrorBoundary onRetry={home.refetch}>
+          <HomeScreenContent
+            home={home}
+            selectedGenreKey={selectedGenreKey}
+            onSelectGenre={onSelectGenre}
+          />
+        </ScreenErrorBoundary>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenWrap: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
   root: {
     flex: 1,
     backgroundColor: colors.surface,

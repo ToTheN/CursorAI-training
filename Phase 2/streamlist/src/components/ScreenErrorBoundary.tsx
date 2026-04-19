@@ -39,7 +39,7 @@ export class ScreenErrorBoundary extends React.Component<
 
   public override render(): ReactNode {
     if (this.state.hasError) {
-      return <ScreenErrorFallback onTryAgain={this.handleTryAgain} />;
+      return <ScreenErrorFallback reason="generic" onTryAgain={this.handleTryAgain} />;
     }
     return this.props.children;
   }

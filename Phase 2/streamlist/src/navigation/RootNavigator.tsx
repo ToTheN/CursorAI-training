@@ -138,8 +138,16 @@ function RootStack() {
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen name="Detail" component={DetailScreen} />
-      <Stack.Screen name="SeeAll" component={SeeAllScreen} />
+      <Stack.Screen
+        name="Detail"
+        component={DetailScreen}
+        options={{ freezeOnBlur: false }}
+      />
+      <Stack.Screen
+        name="SeeAll"
+        component={SeeAllScreen}
+        options={{ freezeOnBlur: false }}
+      />
     </Stack.Navigator>
   );
 }

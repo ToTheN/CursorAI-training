@@ -53,7 +53,7 @@ function SeeAllScreenBody(props: {
   seeAll: ReturnType<typeof useSeeAll>;
 }): React.ReactElement {
   const { contentCardWidth, gridRowStride, onOpenMovie, seeAll } = props;
-  const { data, loading, error, refetch, loadMore, loadingMore } = seeAll;
+  const { data, loading, error, errorKind, refetch, loadMore, loadingMore } = seeAll;
   const results: MovieListItem[] = data?.movies.results ?? [];
   const genreList = useMemo(
     (): Genre[] => data?.genres.genres ?? [],
@@ -90,7 +90,12 @@ function SeeAllScreenBody(props: {
     [contentCardWidth, genreList, onOpenMovie],
   );
   if (error !== null) {
-    return <ScreenErrorFallback onTryAgain={refetch} />;
+    return (
+      <ScreenErrorFallback
+        reason={errorKind === 'network' ? 'network' : 'generic'}
+        onTryAgain={refetch}
+      />
+    );
   }
   if (loading || data === null) {
     return (
@@ -131,7 +136,11 @@ export function SeeAllScreen(props: SeeAllScreenProps): React.ReactElement {
   const insets = useSafeAreaInsets();
   const { screenTitle, rail } = props.route.params;
   const discoverGenreKey: HomeGenreSelection | undefined = resolveDiscoverKey(props.route.params);
-  const seeAll = useSeeAll(rail, discoverGenreKey);
+  const similarSourceMovieId: number | undefined =
+    props.route.params.rail === 'similar' ? props.route.params.similarSourceMovieId : undefined;
+  const similarSourceTvId: number | undefined =
+    props.route.params.rail === 'similar' ? props.route.params.similarSourceTvId : undefined;
+  const seeAll = useSeeAll(rail, discoverGenreKey, similarSourceMovieId, similarSourceTvId);
   const { refetch } = seeAll;
   const { width: windowWidth } = useWindowDimensions();
   const contentCardWidth: number = useMemo(

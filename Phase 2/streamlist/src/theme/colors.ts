@@ -27,4 +27,13 @@ export const colors = {
 
   /** Bottom tab bar: scrim over BlurView */
   tab_bar_overlay:           'rgba(35, 35, 35, 0.70)',
+
+  /** Detail back control: light scrim on BlurView (glassmorphism, not a solid bar). */
+  detail_glass_control_scrim: 'rgba(255, 255, 255, 0.12)',
+
+  /**
+   * Detail back button on Android: solid frosted fill instead of BlurView (native blur can
+   * incorrectly dim the entire screen).
+   */
+  detail_back_button_android_frosted: 'rgba(42, 42, 42, 0.92)',
 } as const;

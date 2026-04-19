@@ -2,9 +2,9 @@ import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
 /**
- * Matches `ContentCard` copy block min height (two title lines + two subtitle lines).
+ * Matches `ContentCard` `copy` `minHeight` (two title lines + two subtitle lines).
  */
-const CARD_COPY_BLOCK_HEIGHT: number =
+export const contentCardCopyBlockMinHeight: number =
   typography.textStyle.titleLg.lineHeight * 2 +
   spacing.xxs +
   typography.textStyle.labelSm.lineHeight * 2;
@@ -41,6 +41,9 @@ export function homeContentCardOuterWidth(windowWidth: number): number {
  */
 export function seeAllGridRowStride(outerCardWidth: number): number {
   return (
-    posterFrameHeightFromOuterWidth(outerCardWidth) + spacing.xs + CARD_COPY_BLOCK_HEIGHT + spacing.md
+    posterFrameHeightFromOuterWidth(outerCardWidth) +
+    spacing.xs +
+    contentCardCopyBlockMinHeight +
+    spacing.md
   );
 }

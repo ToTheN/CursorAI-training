@@ -6,8 +6,9 @@ import {
   fetchTrendingMoviesWeek,
 } from '../api/movies';
 import type { GenreListResponse, MovieListItem, PaginatedResponse } from '../api/types';
+import { queryErrorKindFromUnknown } from '../utils/queryErrorKind';
 import { errorMessageFromUnknown } from './errorMessage';
-import type { UseQueryResult } from './types';
+import type { QueryErrorKind, UseQueryResult } from './types';
 
 /** `'all'` = one discover rail per genre from `/genre/movie/list` (separate API calls). */
 export type HomeGenreSelection = 'all' | number;
@@ -61,6 +62,24 @@ function emptyGenres(): GenreListResponse {
   return { genres: [] };
 }
 
+/**
+ * Keeps the last successful Home response so a remount (e.g. after closing a stack screen)
+ * can restore data immediately and avoid `setLoading(true)` flashing the skeleton and
+ * reloading every poster `Image`.
+ */
+let persistedHomeFeed: { genreKey: HomeGenreSelection; data: HomeScreenData } | null = null;
+
+function readPersistedHomeFeed(genreKey: HomeGenreSelection): HomeScreenData | null {
+  if (persistedHomeFeed !== null && persistedHomeFeed.genreKey === genreKey) {
+    return persistedHomeFeed.data;
+  }
+  return null;
+}
+
+function writePersistedHomeFeed(genreKey: HomeGenreSelection, next: HomeScreenData): void {
+  persistedHomeFeed = { genreKey, data: next };
+}
+
 function hasSuccessfulMovieData(
   settled: PromiseSettledResult<PaginatedResponse<MovieListItem>>,
 ): boolean {
@@ -71,9 +90,14 @@ function hasSuccessfulMovieData(
 }
 
 export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
-  const [data, setData] = useState<HomeScreenData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<HomeScreenData | null>(() =>
+    readPersistedHomeFeed(selectedGenreKey),
+  );
+  const [loading, setLoading] = useState<boolean>(
+    (): boolean => readPersistedHomeFeed(selectedGenreKey) === null,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<QueryErrorKind | null>(null);
   const [loadingMoreDiscover, setLoadingMoreDiscover] = useState<boolean>(false);
   const [loadingMoreTrending, setLoadingMoreTrending] = useState<boolean>(false);
   const [loadingMoreTopRated, setLoadingMoreTopRated] = useState<boolean>(false);
@@ -82,9 +106,14 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
   const discoverMultiLoadInFlightRef = useRef<Set<number>>(new Set());
   const trendingLoadInFlightRef = useRef<boolean>(false);
   const topRatedLoadInFlightRef = useRef<boolean>(false);
+  const prevGenreKeyRef = useRef<HomeGenreSelection>(selectedGenreKey);
   const load = useCallback(async (): Promise<void> => {
-    setLoading(true);
+    const hasWarmCacheForGenre: boolean = readPersistedHomeFeed(selectedGenreKey) !== null;
+    if (!hasWarmCacheForGenre) {
+      setLoading(true);
+    }
     setError(null);
+    setErrorKind(null);
     try {
       const initialSettled: [
         PromiseSettledResult<PaginatedResponse<MovieListItem>>,
@@ -111,6 +140,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
           (r: PromiseSettledResult<unknown>): r is PromiseRejectedResult => r.status === 'rejected',
         );
         setError(errorMessageFromUnknown(firstRejected?.reason));
+        setErrorKind(queryErrorKindFromUnknown(firstRejected?.reason));
         setData(null);
         return;
       }
@@ -173,11 +203,28 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
       }
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
+      setErrorKind(queryErrorKindFromUnknown(err));
       setData(null);
     } finally {
       setLoading(false);
     }
   }, [selectedGenreKey]);
+  useEffect(() => {
+    if (prevGenreKeyRef.current !== selectedGenreKey) {
+      prevGenreKeyRef.current = selectedGenreKey;
+      const cached: HomeScreenData | null = readPersistedHomeFeed(selectedGenreKey);
+      setData(cached);
+      setLoading(cached === null);
+    }
+  }, [selectedGenreKey]);
+  useEffect(() => {
+    if (data !== null) {
+      writePersistedHomeFeed(selectedGenreKey, data);
+    }
+    /* Persist only when `data` changes: if `selectedGenreKey` were a dependency, switching
+     * genres would write the previous rail under the new key (corrupts posters). */
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedGenreKey matches the render for this `data`
+  }, [data]);
   useEffect(() => {
     load().catch(() => undefined);
   }, [load]);
@@ -229,6 +276,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
         });
       } catch (err: unknown) {
         setError(errorMessageFromUnknown(err));
+        setErrorKind(queryErrorKindFromUnknown(err));
       } finally {
         discoverMultiLoadInFlightRef.current.delete(genreId);
         setLoadingMoreDiscover(false);
@@ -266,6 +314,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
       });
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
+      setErrorKind(queryErrorKindFromUnknown(err));
     } finally {
       discoverSingleLoadInFlightRef.current = false;
       setLoadingMoreDiscover(false);
@@ -300,6 +349,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
       });
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
+      setErrorKind(queryErrorKindFromUnknown(err));
     } finally {
       trendingLoadInFlightRef.current = false;
       setLoadingMoreTrending(false);
@@ -334,6 +384,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
       });
     } catch (err: unknown) {
       setError(errorMessageFromUnknown(err));
+      setErrorKind(queryErrorKindFromUnknown(err));
     } finally {
       topRatedLoadInFlightRef.current = false;
       setLoadingMoreTopRated(false);
@@ -343,6 +394,7 @@ export function useHome(selectedGenreKey: HomeGenreSelection): UseHomeResult {
     data,
     loading,
     error,
+    errorKind,
     refetch,
     loadingMoreDiscover,
     loadingMoreTrending,

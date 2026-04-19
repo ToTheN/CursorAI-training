@@ -8,7 +8,7 @@ export type MainTabParamList = {
   Profile: undefined;
 };
 
-export type SeeAllRail = 'discover' | 'trending' | 'topRated';
+export type SeeAllRail = 'discover' | 'trending' | 'topRated' | 'similar';
 
 export type SeeAllScreenParams =
   | {
@@ -19,6 +19,14 @@ export type SeeAllScreenParams =
   | {
       rail: 'trending' | 'topRated';
       screenTitle: string;
+    }
+  | {
+      rail: 'similar';
+      screenTitle: string;
+      /** When set, loads `/movie/{id}/similar`. */
+      similarSourceMovieId?: number;
+      /** When set, loads `/tv/{id}/similar`. Provide either this or `similarSourceMovieId`. */
+      similarSourceTvId?: number;
     };
 
 export type RootStackParamList = {

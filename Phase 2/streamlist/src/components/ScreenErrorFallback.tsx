@@ -1,39 +1,72 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { StreamListLogo } from './StreamListLogo';
 
+/**
+ * Drives user-facing copy. Use `empty` when the API succeeded but returned no usable data.
+ */
+export type ScreenErrorReason = 'network' | 'empty' | 'generic';
+
+const MESSAGE_BY_REASON: Record<ScreenErrorReason, string> = {
+  network: 'Please check your internet connection.',
+  empty: 'We are unable to fetch right now.',
+  generic: 'Something went wrong.',
+};
+
+const TRY_AGAIN_LABEL: string = 'Try Again';
+
 export interface ScreenErrorFallbackProps {
   onTryAgain: () => void;
+  reason: ScreenErrorReason;
+  /** When false, hides the StreamList logo (e.g. compact inline banner). */
+  showLogo?: boolean;
+  /** `fullscreen` fills available space (default). `compact` for embedding in a scroll area. */
+  layout?: 'fullscreen' | 'compact';
+  style?: StyleProp<ViewStyle>;
 }
 
 export function ScreenErrorFallback(props: ScreenErrorFallbackProps) {
-  const { onTryAgain } = props;
+  const { onTryAgain, reason, showLogo = true, layout = 'fullscreen', style } = props;
+  const messageText: string = MESSAGE_BY_REASON[reason];
+  const rootStyle: StyleProp<ViewStyle> = [
+    styles.rootBase,
+    layout === 'fullscreen' ? styles.rootFullscreen : styles.rootCompact,
+    style,
+  ];
   return (
-    <View style={styles.root}>
-      <StreamListLogo />
-      <Text style={styles.message}>Something went wrong</Text>
+    <View style={rootStyle}>
+      {showLogo ? <StreamListLogo /> : null}
+      <Text style={styles.message}>{messageText}</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Try Again"
+        accessibilityLabel={TRY_AGAIN_LABEL}
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
         onPress={onTryAgain}
       >
-        <Text style={styles.buttonLabel}>Try Again</Text>
+        <Text style={styles.buttonLabel}>{TRY_AGAIN_LABEL}</Text>
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
+  rootBase: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     gap: spacing.lg,
+  },
+  rootFullscreen: {
+    flex: 1,
+  },
+  rootCompact: {
+    flexGrow: 0,
+    flexShrink: 0,
+    alignSelf: 'stretch',
+    paddingVertical: spacing.md,
   },
   message: {
     ...typography.textStyle.bodyMd,

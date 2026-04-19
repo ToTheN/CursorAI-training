@@ -5,7 +5,8 @@ import type {
   MovieDetails,
   MovieListItem,
   PaginatedResponse,
-  SimilarMovieItem,
+  TvDetails,
+  TvListItem,
 } from './types';
 
 const DEFAULT_PAGE: number = 1;
@@ -61,9 +62,11 @@ export function buildWithGenresOrParam(genres: ReadonlyArray<{ id: number }>): s
 export async function searchMovies(
   query: string,
   page: number = DEFAULT_PAGE,
+  signal?: AbortSignal,
 ): Promise<PaginatedResponse<MovieListItem>> {
   const response = await apiClient.get<PaginatedResponse<MovieListItem>>('/search/movie', {
     params: { query, page },
+    ...(signal !== undefined ? { signal } : {}),
   });
   return response.data;
 }
@@ -81,10 +84,25 @@ export async function fetchMovieCredits(movieId: number): Promise<MovieCredits> 
 export async function fetchSimilarMovies(
   movieId: number,
   page: number = DEFAULT_PAGE,
-): Promise<PaginatedResponse<SimilarMovieItem>> {
-  const response = await apiClient.get<PaginatedResponse<SimilarMovieItem>>(
+): Promise<PaginatedResponse<MovieListItem>> {
+  const response = await apiClient.get<PaginatedResponse<MovieListItem>>(
     `/movie/${movieId}/similar`,
     { params: { page } },
   );
+  return response.data;
+}
+
+export async function fetchTvDetails(tvId: number): Promise<TvDetails> {
+  const response = await apiClient.get<TvDetails>(`/tv/${tvId}`);
+  return response.data;
+}
+
+export async function fetchSimilarTvShows(
+  tvId: number,
+  page: number = DEFAULT_PAGE,
+): Promise<PaginatedResponse<TvListItem>> {
+  const response = await apiClient.get<PaginatedResponse<TvListItem>>(`/tv/${tvId}/similar`, {
+    params: { page },
+  });
   return response.data;
 }

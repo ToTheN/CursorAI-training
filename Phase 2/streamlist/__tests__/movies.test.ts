@@ -86,11 +86,24 @@ describe('movies api', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/search/movie', { params: { query: 'bat', page: 2 } });
   });
 
+  it('searchMovies forwards AbortSignal when provided', async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: { page: 1, results: [], total_pages: 0, total_results: 0 },
+    });
+    const controller: AbortController = new AbortController();
+    await searchMovies('bat', 1, controller.signal);
+    expect(apiClient.get).toHaveBeenCalledWith('/search/movie', {
+      params: { query: 'bat', page: 1 },
+      signal: controller.signal,
+    });
+  });
+
   it('fetchMovieDetails uses movie id path', async () => {
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: {
         title: 'Test Movie',
         backdrop_path: null,
+        poster_path: null,
         vote_average: 8,
         release_date: '2020-01-01',
         genres: [],

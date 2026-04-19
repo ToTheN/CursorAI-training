@@ -3,9 +3,10 @@ import { buildWithGenresOrParam, fetchMovieGenres } from '../api/movies';
 import type { GenreListResponse, MovieListItem, PaginatedResponse } from '../api/types';
 import type { SeeAllRail } from '../navigation/types';
 import { fetchSeeAllRailPage } from '../utils/seeAllRailPage';
+import { queryErrorKindFromUnknown } from '../utils/queryErrorKind';
 import { errorMessageFromUnknown } from './errorMessage';
 import type { HomeGenreSelection } from './useHome';
-import type { UseQueryResult } from './types';
+import type { QueryErrorKind, UseQueryResult } from './types';
 
 export interface SeeAllScreenData {
   genres: GenreListResponse;
@@ -30,29 +31,34 @@ function emptyGenres(): GenreListResponse {
 interface SeeAllQueryState {
   loading: boolean;
   error: string | null;
+  errorKind: QueryErrorKind | null;
   data: SeeAllScreenData | null;
 }
 
 export function useSeeAll(
   rail: SeeAllRail,
   discoverGenreKey: HomeGenreSelection | undefined,
+  similarSourceMovieId: number | undefined,
+  similarSourceTvId: number | undefined,
 ): UseSeeAllResult {
   const [query, setQuery] = useState<SeeAllQueryState>({
     loading: true,
     error: null,
+    errorKind: null,
     data: null,
   });
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [discoverWithGenres, setDiscoverWithGenres] = useState<number | string | undefined>(undefined);
   const loadInFlightRef = useRef<boolean>(false);
   const load = useCallback(async (): Promise<void> => {
-    setQuery({ loading: true, error: null, data: null });
+    setQuery({ loading: true, error: null, errorKind: null, data: null });
     try {
       if (rail === 'discover') {
         if (discoverGenreKey === undefined) {
           setQuery({
             loading: false,
             error: 'Missing genre for discover',
+            errorKind: 'generic',
             data: null,
           });
           return;
@@ -68,10 +74,13 @@ export function useSeeAll(
             'discover',
             1,
             withGenres,
+            undefined,
+            undefined,
           );
           setQuery({
             loading: false,
             error: null,
+            errorKind: null,
             data: { genres: genresResponse, movies: firstPage },
           });
           return;
@@ -80,7 +89,7 @@ export function useSeeAll(
         setDiscoverWithGenres(genreId);
         const [genresSettled, moviesSettled] = await Promise.allSettled([
           fetchMovieGenres(),
-          fetchSeeAllRailPage('discover', 1, genreId),
+          fetchSeeAllRailPage('discover', 1, genreId, undefined, undefined),
         ]);
         const genresResponse: GenreListResponse =
           genresSettled.status === 'fulfilled' ? genresSettled.value : emptyGenres();
@@ -88,6 +97,7 @@ export function useSeeAll(
           setQuery({
             loading: false,
             error: errorMessageFromUnknown(moviesSettled.reason),
+            errorKind: queryErrorKindFromUnknown(moviesSettled.reason),
             data: null,
           });
           return;
@@ -95,6 +105,41 @@ export function useSeeAll(
         setQuery({
           loading: false,
           error: null,
+          errorKind: null,
+          data: { genres: genresResponse, movies: moviesSettled.value },
+        });
+        return;
+      }
+      if (rail === 'similar') {
+        if (similarSourceMovieId === undefined && similarSourceTvId === undefined) {
+          setQuery({
+            loading: false,
+            error: 'Missing source title for similar',
+            errorKind: 'generic',
+            data: null,
+          });
+          return;
+        }
+        setDiscoverWithGenres(undefined);
+        const [genresSettled, moviesSettled] = await Promise.allSettled([
+          fetchMovieGenres(),
+          fetchSeeAllRailPage('similar', 1, undefined, similarSourceMovieId, similarSourceTvId),
+        ]);
+        const genresResponse: GenreListResponse =
+          genresSettled.status === 'fulfilled' ? genresSettled.value : emptyGenres();
+        if (moviesSettled.status === 'rejected') {
+          setQuery({
+            loading: false,
+            error: errorMessageFromUnknown(moviesSettled.reason),
+            errorKind: queryErrorKindFromUnknown(moviesSettled.reason),
+            data: null,
+          });
+          return;
+        }
+        setQuery({
+          loading: false,
+          error: null,
+          errorKind: null,
           data: { genres: genresResponse, movies: moviesSettled.value },
         });
         return;
@@ -102,7 +147,7 @@ export function useSeeAll(
       setDiscoverWithGenres(undefined);
       const [genresSettled, moviesSettled] = await Promise.allSettled([
         fetchMovieGenres(),
-        fetchSeeAllRailPage(rail, 1, undefined),
+        fetchSeeAllRailPage(rail, 1, undefined, undefined, undefined),
       ]);
       const genresResponse: GenreListResponse =
         genresSettled.status === 'fulfilled' ? genresSettled.value : emptyGenres();
@@ -110,6 +155,7 @@ export function useSeeAll(
         setQuery({
           loading: false,
           error: errorMessageFromUnknown(moviesSettled.reason),
+          errorKind: queryErrorKindFromUnknown(moviesSettled.reason),
           data: null,
         });
         return;
@@ -117,16 +163,18 @@ export function useSeeAll(
       setQuery({
         loading: false,
         error: null,
+        errorKind: null,
         data: { genres: genresResponse, movies: moviesSettled.value },
       });
     } catch (err: unknown) {
       setQuery({
         loading: false,
         error: errorMessageFromUnknown(err),
+        errorKind: queryErrorKindFromUnknown(err),
         data: null,
       });
     }
-  }, [discoverGenreKey, rail]);
+  }, [discoverGenreKey, rail, similarSourceMovieId, similarSourceTvId]);
   useEffect(() => {
     load().catch(() => undefined);
   }, [load]);
@@ -149,6 +197,8 @@ export function useSeeAll(
         rail,
         nextPage,
         discoverWithGenres,
+        similarSourceMovieId,
+        similarSourceTvId,
       );
       setQuery((prev: SeeAllQueryState): SeeAllQueryState => {
         if (prev.data === null) {
@@ -171,16 +221,18 @@ export function useSeeAll(
       setQuery((prev: SeeAllQueryState): SeeAllQueryState => ({
         ...prev,
         error: errorMessageFromUnknown(err),
+        errorKind: queryErrorKindFromUnknown(err),
       }));
     } finally {
       loadInFlightRef.current = false;
       setLoadingMore(false);
     }
-  }, [discoverWithGenres, query.data, rail]);
+  }, [discoverWithGenres, query.data, rail, similarSourceMovieId, similarSourceTvId]);
   return {
     data: query.data,
     loading: query.loading,
     error: query.error,
+    errorKind: query.errorKind,
     refetch,
     loadingMore,
     loadMore,

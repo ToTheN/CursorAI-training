@@ -24,6 +24,7 @@ You are a senior software engineer, expert in TypeScript and React Native. Prefe
 - Use custom hook for every data fetch for every screen. 
 - No inline useEffect + fetch in screen components.
 - All API calls go through src/api/client.ts. No direct Axios imports in hooks or components.
+- **Authorization:** Every TMDB request must include `Authorization: Bearer {TMDB_ACCESS_TOKEN}`. Configure this only in `src/api/client.ts` on the shared Axios instance using the **central request interceptor**. Do **not** set `Authorization` on individual `apiClient.get`/`post`/etc. calls, and do not add token logic in hooks or components.
 - Use AsyncStorage only for watchList page
 - Every data-fetching hook must return this consistent shape:
 

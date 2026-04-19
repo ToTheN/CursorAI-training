@@ -16,7 +16,7 @@ describe('fetchSeeAllRailPage', () => {
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: { page: 2, results: [], total_pages: 0, total_results: 0 },
     });
-    await fetchSeeAllRailPage('trending', 2, undefined);
+    await fetchSeeAllRailPage('trending', 2, undefined, undefined, undefined);
     expect(apiClient.get).toHaveBeenCalledWith('/trending/movie/week', { params: { page: 2 } });
   });
 
@@ -24,7 +24,7 @@ describe('fetchSeeAllRailPage', () => {
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: { page: 1, results: [], total_pages: 0, total_results: 0 },
     });
-    await fetchSeeAllRailPage('topRated', 1, undefined);
+    await fetchSeeAllRailPage('topRated', 1, undefined, undefined, undefined);
     expect(apiClient.get).toHaveBeenCalledWith('/movie/top_rated', { params: { page: 1 } });
   });
 
@@ -32,9 +32,25 @@ describe('fetchSeeAllRailPage', () => {
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: { page: 1, results: [], total_pages: 0, total_results: 0 },
     });
-    await fetchSeeAllRailPage('discover', 1, 28);
+    await fetchSeeAllRailPage('discover', 1, 28, undefined, undefined);
     expect(apiClient.get).toHaveBeenCalledWith('/discover/movie', {
       params: { page: 1, with_genres: 28 },
     });
+  });
+
+  it('calls similar endpoint when similar rail includes source movie id', async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: { page: 1, results: [], total_pages: 0, total_results: 0 },
+    });
+    await fetchSeeAllRailPage('similar', 2, undefined, 55, undefined);
+    expect(apiClient.get).toHaveBeenCalledWith('/movie/55/similar', { params: { page: 2 } });
+  });
+
+  it('calls TV similar endpoint when similar rail includes source TV id', async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: { page: 1, results: [], total_pages: 0, total_results: 0 },
+    });
+    await fetchSeeAllRailPage('similar', 1, undefined, undefined, 99);
+    expect(apiClient.get).toHaveBeenCalledWith('/tv/99/similar', { params: { page: 1 } });
   });
 });
