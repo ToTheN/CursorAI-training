@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ShimmerPlaceholder } from '../ShimmerPlaceholder';
+import { ShimmerPlaceholder } from '../common/ShimmerPlaceholder';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';

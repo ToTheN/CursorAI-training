@@ -7,7 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { STREAMLIST_APP_DISPLAY_NAME } from '../components/StreamListLogo';
+import { STREAMLIST_APP_DISPLAY_NAME } from '../components/common/StreamListLogo';
 import type { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';

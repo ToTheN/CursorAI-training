@@ -9,10 +9,10 @@ import {
   type ViewStyle,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
-import { posterFrameHeightFromOuterWidth } from '../utils/contentCardLayout';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
+import { posterFrameHeightFromOuterWidth } from '../../utils/contentCardLayout';
 
 /** Portrait poster ratio (width : height). */
 const POSTER_ASPECT_RATIO: number = 2 / 3;

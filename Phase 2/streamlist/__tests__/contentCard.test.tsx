@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import renderer, { act } from 'react-test-renderer';
-import { ContentCard } from '../src/components/ContentCard';
+import { ContentCard } from '../src/components/common/ContentCard';
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => {
   const React = require('react');

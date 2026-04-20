@@ -15,10 +15,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Genre, MovieListItem } from '../api/types';
-import { ContentCard } from '../components/ContentCard';
-import { GlobalAppBar } from '../components/GlobalAppBar';
-import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
-import { ScreenErrorFallback } from '../components/ScreenErrorFallback';
+import { ContentCard } from '../components/common/ContentCard';
+import { GlobalAppBar } from '../components/common/GlobalAppBar';
+import { ScreenErrorBoundary } from '../components/common/ScreenErrorBoundary';
+import { ScreenErrorFallback } from '../components/common/ScreenErrorFallback';
 import { HomeScreenSkeleton } from '../components/skeletons/HomeScreenSkeleton';
 import type { DiscoverGenreRail, HomeGenreSelection, UseHomeResult } from '../hooks/useHome';
 import { useHome } from '../hooks/useHome';

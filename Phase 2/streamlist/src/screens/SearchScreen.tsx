@@ -17,15 +17,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { Genre, MovieListItem } from '../api/types';
-import { ContentCard } from '../components/ContentCard';
-import { GlobalAppBar } from '../components/GlobalAppBar';
-import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
+import { ContentCard } from '../components/common/ContentCard';
+import { GlobalAppBar } from '../components/common/GlobalAppBar';
+import { ScreenErrorBoundary } from '../components/common/ScreenErrorBoundary';
 import {
   ScreenErrorFallback,
   type ScreenErrorReason,
-} from '../components/ScreenErrorFallback';
+} from '../components/common/ScreenErrorFallback';
 import { SearchScreenSkeleton } from '../components/skeletons/SearchScreenSkeleton';
-import { ShimmerPlaceholder } from '../components/ShimmerPlaceholder';
+import { ShimmerPlaceholder } from '../components/common/ShimmerPlaceholder';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useSearch, type UseSearchResult } from '../hooks/useSearch';
 import {

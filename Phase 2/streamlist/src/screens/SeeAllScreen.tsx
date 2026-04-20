@@ -19,9 +19,9 @@ import { SeeAllScreenSkeleton } from '../components/skeletons/SeeAllScreenSkelet
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import type { Genre, MovieListItem } from '../api/types';
-import { ContentCard } from '../components/ContentCard';
-import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
-import { ScreenErrorFallback } from '../components/ScreenErrorFallback';
+import { ContentCard } from '../components/common/ContentCard';
+import { ScreenErrorBoundary } from '../components/common/ScreenErrorBoundary';
+import { ScreenErrorFallback } from '../components/common/ScreenErrorFallback';
 import { useSeeAll } from '../hooks/useSeeAll';
 import type { HomeGenreSelection } from '../hooks/useHome';
 import type { RootStackParamList } from '../navigation/types';

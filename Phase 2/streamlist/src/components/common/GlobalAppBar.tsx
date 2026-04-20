@@ -6,9 +6,9 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StreamListLogo } from './StreamListLogo';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import { StreamListLogo } from './StreamListLogo.tsx';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 const notificationIconSize: number = spacing.lg;
 

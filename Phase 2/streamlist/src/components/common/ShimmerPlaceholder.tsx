@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, type StyleProp, type ViewStyle } from 'react-native';
-import { colors } from '../theme/colors';
+import { colors } from '../../theme/colors';
 
 const SHIMMER_HALF_MS: number = 750;
 

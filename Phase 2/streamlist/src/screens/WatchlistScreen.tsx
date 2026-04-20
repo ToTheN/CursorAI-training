@@ -16,11 +16,11 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Genre, MovieDetails, MovieListItem, TvDetails } from '../api/types';
-import { ContentCard } from '../components/ContentCard';
-import { GlobalAppBar } from '../components/GlobalAppBar';
-import { ScreenErrorBoundary } from '../components/ScreenErrorBoundary';
-import { ScreenErrorFallback } from '../components/ScreenErrorFallback';
-import { ShimmerPlaceholder } from '../components/ShimmerPlaceholder';
+import { ContentCard } from '../components/common/ContentCard';
+import { GlobalAppBar } from '../components/common/GlobalAppBar';
+import { ScreenErrorBoundary } from '../components/common/ScreenErrorBoundary';
+import { ScreenErrorFallback } from '../components/common/ScreenErrorFallback';
+import { ShimmerPlaceholder } from '../components/common/ShimmerPlaceholder';
 import type { UseQueryResult } from '../hooks/types';
 import {
   useWatchlistPopularRecommendations,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ShimmerPlaceholder } from '../ShimmerPlaceholder';
+import { ShimmerPlaceholder } from '../common/ShimmerPlaceholder';
 import { spacing } from '../../theme/spacing';
 import {
   HOME_HORIZONTAL_CARD_GAP,
