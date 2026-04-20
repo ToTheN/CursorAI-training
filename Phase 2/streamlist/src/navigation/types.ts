@@ -30,6 +30,7 @@ export type SeeAllScreenParams =
     };
 
 export type RootStackParamList = {
+  Splash: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   Detail: { movieId: number };
   SeeAll: SeeAllScreenParams;

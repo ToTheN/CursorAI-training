@@ -5,7 +5,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
-const APP_NAME_PASCAL: string = 'Streamlist';
+export const STREAMLIST_APP_DISPLAY_NAME: string = 'Streamlist';
 const movieIconSize: number = spacing.xl - 6;
 
 export interface StreamListLogoProps {
@@ -27,7 +27,7 @@ export function StreamListLogo(props: StreamListLogoProps) {
         style={compact ? styles.titleCompact : styles.title}
         numberOfLines={1}
       >
-        {APP_NAME_PASCAL}
+        {STREAMLIST_APP_DISPLAY_NAME}
       </Text>
     </View>
   );

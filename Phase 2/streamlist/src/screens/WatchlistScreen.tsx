@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   becauseHeading: {
-    ...typography.textStyle.titleSm,
+    ...typography.textStyle.titleLg,
     fontFamily: typography.fontFamily.manropeBold,
     color: colors.on_surface,
     flex: 1,

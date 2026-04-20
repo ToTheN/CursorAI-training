@@ -6,14 +6,15 @@ import {
   type NavigationContainerRefWithCurrent,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { DetailScreen } from '../screens/DetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { SeeAllScreen } from '../screens/SeeAllScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { SearchScreen } from '../screens/SearchScreen';
+import { SplashScreen } from '../screens/SplashScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -46,12 +47,42 @@ const navigationTheme = {
   },
 };
 
+const TAB_ICON_SCALE_FOCUSED = 1.12;
+const TAB_ICON_SCALE_IDLE = 1;
+
+interface TabBarAnimatedIconProps {
+  focused: boolean;
+  children: React.ReactElement;
+}
+
+function TabBarAnimatedIcon(props: TabBarAnimatedIconProps) {
+  const { focused, children } = props;
+  const scale = useRef(
+    new Animated.Value(focused ? TAB_ICON_SCALE_FOCUSED : TAB_ICON_SCALE_IDLE),
+  ).current;
+  useEffect(() => {
+    Animated.spring(scale, {
+      toValue: focused ? TAB_ICON_SCALE_FOCUSED : TAB_ICON_SCALE_IDLE,
+      friction: 7,
+      tension: 140,
+      useNativeDriver: true,
+    }).start();
+  }, [focused, scale]);
+  return (
+    <Animated.View style={[styles.tabBarIconWrap, { transform: [{ scale }] }]}>
+      {children}
+    </Animated.View>
+  );
+}
+
 const homeTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
   color,
   size,
   focused,
 }) => (
-  <Ionicons name={focused ? 'home' : 'home'} size={size} color={color} />
+  <TabBarAnimatedIcon focused={focused}>
+    <Ionicons name={focused ? 'home' : 'home'} size={size} color={color} />
+  </TabBarAnimatedIcon>
 );
 
 const searchTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
@@ -59,11 +90,13 @@ const searchTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = 
   size,
   focused,
 }) => (
-  <Ionicons
-    name={focused ? 'search' : 'search-outline'}
-    size={size}
-    color={color}
-  />
+  <TabBarAnimatedIcon focused={focused}>
+    <Ionicons
+      name={focused ? 'search' : 'search-outline'}
+      size={size}
+      color={color}
+    />
+  </TabBarAnimatedIcon>
 );
 
 const watchlistTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
@@ -71,11 +104,13 @@ const watchlistTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']>
   size,
   focused,
 }) => (
-  <Ionicons
-    name={focused ? 'bookmark' : 'bookmark'}
-    size={size}
-    color={color}
-  />
+  <TabBarAnimatedIcon focused={focused}>
+    <Ionicons
+      name={focused ? 'bookmark' : 'bookmark'}
+      size={size}
+      color={color}
+    />
+  </TabBarAnimatedIcon>
 );
 
 const profileTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
@@ -83,11 +118,13 @@ const profileTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> =
   size,
   focused,
 }) => (
-  <Ionicons
-    name={focused ? 'person' : 'person'}
-    size={size}
-    color={color}
-  />
+  <TabBarAnimatedIcon focused={focused}>
+    <Ionicons
+      name={focused ? 'person' : 'person'}
+      size={size}
+      color={color}
+    />
+  </TabBarAnimatedIcon>
 );
 
 function MainTabs() {
@@ -132,11 +169,20 @@ function MainTabs() {
 function RootStack() {
   return (
     <Stack.Navigator
+      initialRouteName="Splash"
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.surface },
       }}
     >
+      <Stack.Screen
+        name="Splash"
+        component={SplashScreen}
+        options={{
+          gestureEnabled: false,
+          contentStyle: { backgroundColor: colors.surface_container },
+        }}
+      />
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen
         name="Detail"
@@ -183,5 +229,9 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
     backgroundColor: colors.surface,
+  },
+  tabBarIconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
