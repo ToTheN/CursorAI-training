@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } fro
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
-import { StreamListLogo } from './StreamListLogo';
+import { StreamListLogo } from './StreamListLogo.tsx';
 
 /**
  * Drives user-facing copy. Use `empty` when the API succeeded but returned no usable data.

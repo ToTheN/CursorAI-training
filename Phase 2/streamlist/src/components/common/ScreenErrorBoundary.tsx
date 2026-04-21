@@ -1,5 +1,5 @@
 import React, { type ErrorInfo, type ReactNode } from 'react';
-import { ScreenErrorFallback } from './ScreenErrorFallback';
+import { ScreenErrorFallback } from './ScreenErrorFallback.tsx';
 
 export interface ScreenErrorBoundaryProps {
   onRetry: () => void;
