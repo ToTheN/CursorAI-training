@@ -202,6 +202,7 @@ function DetailScreenBody(props: {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
       >
         <View style={styles.heroBlock} collapsable={false}>
           {heroUri === null ? (
@@ -247,7 +248,7 @@ function DetailScreenBody(props: {
               accessibilityLabel="In Watchlist. Remove from watchlist"
               onPress={onToggleWatchlist}
               style={({ pressed }) => [
-                styles.watchlistAddedPressable,
+                styles.watchlistPressable,
                 pressed && styles.watchlistPressed,
               ]}
             >
@@ -261,17 +262,24 @@ function DetailScreenBody(props: {
               accessibilityRole="button"
               accessibilityLabel="Add to Watchlist"
               onPress={onToggleWatchlist}
-              style={({ pressed }) => [pressed && styles.watchlistPressed]}
+              style={({ pressed }) => [
+                styles.watchlistPressable,
+                pressed && styles.watchlistPressed,
+              ]}
             >
-              <LinearGradient
-                colors={[colors.primary, colors.primary_container]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.watchlistGradient}
-              >
-                <MaterialIcons name="bookmark-add" size={spacing.lg} color={colors.secondary_container} />
-                <Text style={styles.watchlistDefaultLabel}>Add to Watchlist</Text>
-              </LinearGradient>
+              <View style={styles.watchlistGradientShell} collapsable={false}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary_container]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
+                />
+                <View style={styles.watchlistGradientInner}>
+                  <MaterialIcons name="bookmark-add" size={spacing.lg} color={colors.secondary_container} />
+                  <Text style={styles.watchlistDefaultLabel}>Add to Watchlist</Text>
+                </View>
+              </View>
             </Pressable>
           )}
           <Text style={styles.synopsisHeading}>Synopsis</Text>
@@ -527,23 +535,26 @@ const styles = StyleSheet.create({
     ...typography.textStyle.labelSm,
     color: colors.on_surface_variant,
   },
-  watchlistGradient: {
+  watchlistPressable: {
+    width: '100%',
+  },
+  watchlistGradientShell: {
+    width: '100%',
+    borderRadius: spacing.xs,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.secondary_container,
+  },
+  watchlistGradientInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.sm,
-    borderRadius: spacing.xs,
-    width: '100%',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.secondary_container,
   },
   watchlistDefaultLabel: {
     ...typography.textStyle.titleLg,
     color: colors.secondary_container,
-  },
-  watchlistAddedPressable: {
-    width: '100%',
   },
   watchlistAdded: {
     flexDirection: 'row',
