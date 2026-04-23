@@ -4,15 +4,19 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
+  type DimensionValue,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Genre, MovieListItem } from '../api/types';
 import { ContentCard } from '../components/common/ContentCard';
@@ -26,15 +30,36 @@ import type { MainTabParamList, RootStackParamList, SeeAllScreenParams } from '.
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
-import { buildImageUrl, IMAGE_SIZE_CARD } from '../utils/image';
+import { buildImageUrl, IMAGE_SIZE_BACKDROP, IMAGE_SIZE_CARD, IMAGE_SIZE_HERO } from '../utils/image';
 import { shouldLoadMoreMoviesRow } from '../utils/horizontalScroll';
-import { HOME_HORIZONTAL_CARD_GAP, homeContentCardOuterWidth } from '../utils/contentCardLayout';
+import {
+  HOME_HORIZONTAL_CARD_GAP,
+  homeContentCardOuterWidth,
+  homeHeroPortraitHeight,
+  homeHorizontalContentWidth,
+} from '../utils/contentCardLayout';
 import { buildMovieCardSubtitle } from '../utils/movieCard';
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Home'>,
   NativeStackNavigationProp<RootStackParamList>
 >;
+
+const HERO_GRADIENT_BOTTOM_RATIO: number = 0.58;
+const HERO_GRADIENT_HEIGHT: DimensionValue = `${String(Math.round(HERO_GRADIENT_BOTTOM_RATIO * 100))}%` as DimensionValue;
+const HERO_TEXT_GAP: number = spacing.sm;
+const HERO_BUTTON_COMPACT_FLOOR: number = spacing.lg + spacing.sm;
+/** Favor one-line / shorter title style when content width is phone-sized. */
+const HERO_NARROW_MAX_CONTENT_WIDTH: number = spacing.lg * 16;
+const HERO_PLAY_MIN: number = spacing.lg;
+const HERO_PLAY_MAX: number = spacing.xl + spacing.xs;
+
+function buildHeroDescriptionText(item: MovieListItem, allGenres: Genre[]): string {
+  if (item.overview !== undefined && item.overview.trim().length > 0) {
+    return item.overview.trim();
+  }
+  return buildMovieCardSubtitle(item, allGenres);
+}
 
 interface HomeScreenContentProps {
   home: UseHomeResult;
@@ -50,7 +75,21 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
     },
     [navigation],
   );
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const heroContentWidth: number = useMemo((): number => {
+    return homeHorizontalContentWidth(windowWidth);
+  }, [windowWidth]);
+  const heroImageHeight: number = useMemo((): number => {
+    return homeHeroPortraitHeight(heroContentWidth, windowHeight);
+  }, [heroContentWidth, windowHeight]);
+  const isNarrowHomeLayout: boolean = heroContentWidth < HERO_NARROW_MAX_CONTENT_WIDTH;
+  const heroPlayIconSize: number = useMemo((): number => {
+    const scaled: number = Math.round(heroContentWidth * 0.055);
+    return Math.max(HERO_PLAY_MIN, Math.min(HERO_PLAY_MAX, scaled));
+  }, [heroContentWidth]);
+  const heroActionButtonHeight: number = useMemo((): number => {
+    return Math.max(HERO_BUTTON_COMPACT_FLOOR, heroPlayIconSize + spacing.xs);
+  }, [heroPlayIconSize]);
   const contentCardWidth: number = useMemo(
     (): number => homeContentCardOuterWidth(windowWidth),
     [windowWidth],
@@ -129,6 +168,44 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
     },
     [loadMoreTopRated, topRatedResults.length, movieRowItemStride],
   );
+  const heroMovie: MovieListItem | null = useMemo((): MovieListItem | null => {
+    if (data === null) {
+      return null;
+    }
+    const fromTrending: MovieListItem[] = data.trending?.results ?? [];
+    if (fromTrending.length > 0) {
+      return fromTrending[0];
+    }
+    const fromTopRated: MovieListItem[] = data.topRated?.results ?? [];
+    if (fromTopRated.length > 0) {
+      return fromTopRated[0];
+    }
+    if (data.discoverByGenre !== null && data.discoverByGenre.results.length > 0) {
+      return data.discoverByGenre.results[0];
+    }
+    const rails: DiscoverGenreRail[] = data.discoverRails ?? [];
+    for (const rail of rails) {
+      if (rail.discover.results.length > 0) {
+        return rail.discover.results[0];
+      }
+    }
+    return null;
+  }, [data]);
+  const heroImageUri: string | null = useMemo((): string | null => {
+    if (heroMovie === null) {
+      return null;
+    }
+    if (heroMovie.poster_path !== null && heroMovie.poster_path.length > 0) {
+      return buildImageUrl(heroMovie.poster_path, IMAGE_SIZE_HERO);
+    }
+    return buildImageUrl(heroMovie.backdrop_path, IMAGE_SIZE_BACKDROP);
+  }, [heroMovie]);
+  const heroDescriptionText: string = useMemo((): string => {
+    if (data === null || heroMovie === null) {
+      return '';
+    }
+    return buildHeroDescriptionText(heroMovie, data.genres.genres);
+  }, [data, heroMovie]);
   if (error !== null) {
     return (
       <ScreenErrorFallback
@@ -202,6 +279,97 @@ function HomeScreenContent(props: HomeScreenContentProps): React.ReactElement {
           );
         })}
       </ScrollView>
+      {heroMovie !== null ? (
+        <View
+          style={styles.heroSection}
+          accessibilityLabel={`Spotlight, ${heroMovie.title}`}
+          importantForAccessibility="yes"
+        >
+          <View style={styles.heroImageFrame}>
+            {heroImageUri === null ? (
+              <View
+                style={[styles.heroImage, { height: heroImageHeight }, styles.heroImagePlaceholder]}
+              >
+                <Text style={styles.heroPlaceholderText} numberOfLines={2}>
+                  {heroMovie.title}
+                </Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: heroImageUri }}
+                style={[styles.heroImage, { height: heroImageHeight }]}
+                resizeMode="cover"
+                accessibilityLabel={heroMovie.title}
+              />
+            )}
+            <LinearGradient
+              colors={['transparent', colors.surface]}
+              locations={[0, 1]}
+              style={[styles.heroBottomGradient, { height: HERO_GRADIENT_HEIGHT }]}
+              pointerEvents="none"
+            />
+            <View style={styles.heroOverlay} pointerEvents="box-none">
+              <View style={styles.heroBadge} accessibilityElementsHidden>
+                <Text style={styles.heroBadgeText}>New release</Text>
+              </View>
+              <Text
+                style={[styles.heroTitle, isNarrowHomeLayout ? styles.heroTitleNarrow : undefined]}
+                numberOfLines={2}
+              >
+                {heroMovie.title.toUpperCase()}
+              </Text>
+              {heroDescriptionText.length > 0 ? (
+                <Text style={styles.heroDescription} numberOfLines={2} ellipsizeMode="tail">
+                  {heroDescriptionText}
+                </Text>
+              ) : null}
+              <View style={styles.heroButtonRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Watch now"
+                  onPress={(): void => {
+                    onOpenMovie(heroMovie);
+                  }}
+                  style={({ pressed }) => [
+                    { minHeight: heroActionButtonHeight },
+                    styles.heroButtonPrimary,
+                    styles.heroButtonBase,
+                    pressed && styles.heroButtonPrimaryPressed,
+                  ]}
+                >
+                  <View style={styles.heroWatchNowInner} accessibilityElementsHidden>
+                    <MaterialIcons
+                      name="play-arrow"
+                      size={heroPlayIconSize}
+                      color={colors.secondary_container}
+                    />
+                    <Text style={styles.heroWatchNowLabel} numberOfLines={1}>
+                      Watch now
+                    </Text>
+                  </View>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Show details"
+                  onPress={(): void => {
+                    onOpenMovie(heroMovie);
+                  }}
+                  style={({ pressed }) => [
+                    { minHeight: heroActionButtonHeight },
+                    styles.heroButtonSecondary,
+                    styles.heroButtonBase,
+                    pressed && styles.heroButtonSecondaryPressed,
+                  ]}
+                >
+                  <Text style={styles.heroDetailsLabel} numberOfLines={2}>
+                    Show Details
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </View>
+      ) : null}
       {selectedGenreKey === 'all' && visibleDiscoverRails.length > 0
         ? visibleDiscoverRails.map((rail: DiscoverGenreRail) => (
               <React.Fragment key={rail.genreId}>
@@ -482,5 +650,119 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: HOME_HORIZONTAL_CARD_GAP,
     paddingVertical: spacing.xs,
+  },
+  heroSection: {
+    width: '100%',
+  },
+  heroImageFrame: {
+    borderRadius: spacing.md,
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
+    backgroundColor: colors.surface_container,
+  },
+  heroImage: {
+    width: '100%',
+    backgroundColor: colors.surface_container,
+  },
+  heroImagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+  },
+  heroPlaceholderText: {
+    ...typography.textStyle.titleLg,
+    color: colors.on_surface_variant,
+    textAlign: 'center',
+  },
+  heroBottomGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  heroOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+    gap: HERO_TEXT_GAP,
+  },
+  heroBadge: {
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xxs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: spacing.xs,
+    backgroundColor: colors.primary_container,
+    maxWidth: '100%',
+  },
+  heroBadgeText: {
+    ...typography.textStyle.labelSm,
+    fontFamily: typography.fontFamily.interSemiBold,
+    color: colors.on_surface,
+    textTransform: 'uppercase',
+  },
+  heroTitle: {
+    ...typography.textStyle.displayMd,
+    color: colors.on_surface,
+    textTransform: 'uppercase',
+  },
+  heroTitleNarrow: {
+    fontFamily: typography.textStyle.displayMd.fontFamily,
+    fontSize: typography.textStyle.headlineMd.fontSize,
+    lineHeight: typography.textStyle.headlineMd.lineHeight,
+    letterSpacing: typography.textStyle.headlineMd.letterSpacing,
+  },
+  heroDescription: {
+    ...typography.textStyle.bodyMd,
+    color: colors.on_surface,
+  },
+  heroButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  heroButtonBase: {
+    flex: 1,
+    borderRadius: spacing.xxs,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroButtonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  heroButtonPrimaryPressed: {
+    opacity: 0.9,
+  },
+  heroButtonSecondary: {
+    backgroundColor: colors.hero_button_secondary,
+  },
+  heroButtonSecondaryPressed: {
+    opacity: 0.9,
+  },
+  heroWatchNowInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    width: '100%',
+    gap: spacing.xs,
+  },
+  heroWatchNowLabel: {
+    ...typography.textStyle.titleSm,
+    textAlign: 'center',
+    color: colors.secondary_container,
+  },
+  heroDetailsLabel: {
+    width: '100%',
+    textAlign: 'center',
+    ...typography.textStyle.titleSm,
+    textTransform: 'none',
+    fontFamily: typography.fontFamily.interSemiBold,
+    color: colors.on_surface,
   },
 });

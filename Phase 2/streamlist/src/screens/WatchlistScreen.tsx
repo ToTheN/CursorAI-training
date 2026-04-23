@@ -1,5 +1,5 @@
 import type { CompositeNavigationProp } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -543,6 +543,14 @@ function WatchlistWithData(props: WatchlistWithDataProps): React.ReactElement {
 
 export function WatchlistScreen(): React.ReactElement {
   const entries = useWatchlistStore((state) => state.entries);
+  const acknowledgeWatchlistViewed = useWatchlistStore(
+    (state) => state.acknowledgeWatchlistViewed,
+  );
+  useFocusEffect(
+    useCallback((): void => {
+      acknowledgeWatchlistViewed();
+    }, [acknowledgeWatchlistViewed]),
+  );
   const isEmpty: boolean = entries.length === 0;
   const popular = useWatchlistPopularRecommendations(isEmpty);
   const hydration = useWatchlistHydration(entries);

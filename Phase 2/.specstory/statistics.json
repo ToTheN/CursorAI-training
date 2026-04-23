@@ -1,5 +1,14 @@
 {
   "sessions": {
+    "02f88df4-67cd-4014-911d-7c3513456964": {
+      "user_message_count": 3,
+      "agent_message_count": 41,
+      "start_timestamp": "2026-04-23T15:16:39+05:30",
+      "end_timestamp": "2026-04-23T15:16:39+05:30",
+      "markdown_size_bytes": 24785,
+      "provider": "cursoride",
+      "last_updated": "2026-04-23T09:56:31Z"
+    },
     "05238ee8-e555-482b-9cd2-ff7885434540": {
       "user_message_count": 3,
       "agent_message_count": 112,
@@ -8,6 +17,15 @@
       "markdown_size_bytes": 48141,
       "provider": "cursoride",
       "last_updated": "2026-04-15T12:45:35Z"
+    },
+    "080e4b06-8ada-4c82-b6ee-9c184d63c9f7": {
+      "user_message_count": 7,
+      "agent_message_count": 204,
+      "start_timestamp": "2026-04-23T15:38:28+05:30",
+      "end_timestamp": "2026-04-23T15:38:28+05:30",
+      "markdown_size_bytes": 111685,
+      "provider": "cursoride",
+      "last_updated": "2026-04-23T10:33:41Z"
     },
     "0c9fbc05-1ddb-4344-bf2f-1bb3792f01b3": {
       "user_message_count": 8,
@@ -81,6 +99,15 @@
       "provider": "cursoride",
       "last_updated": "2026-04-14T06:13:45Z"
     },
+    "29508bb5-4b7a-4bd3-92d9-2cffea41f90f": {
+      "user_message_count": 1,
+      "agent_message_count": 6,
+      "start_timestamp": "2026-04-23T16:06:55+05:30",
+      "end_timestamp": "2026-04-23T16:06:55+05:30",
+      "markdown_size_bytes": 3729,
+      "provider": "cursoride",
+      "last_updated": "2026-04-23T10:37:52Z"
+    },
     "53d493ec-f1f7-49fb-ac80-ffa2197263e5": {
       "user_message_count": 2,
       "agent_message_count": 49,
@@ -152,6 +179,15 @@
       "markdown_size_bytes": 1622,
       "provider": "cursoride",
       "last_updated": "2026-04-15T13:47:28Z"
+    },
+    "96a3b41b-f9e0-4171-a74a-fa1f6328fe68": {
+      "user_message_count": 1,
+      "agent_message_count": 8,
+      "start_timestamp": "2026-04-23T15:55:16+05:30",
+      "end_timestamp": "2026-04-23T15:55:16+05:30",
+      "markdown_size_bytes": 5889,
+      "provider": "cursoride",
+      "last_updated": "2026-04-23T10:28:03Z"
     },
     "9837f586-5ac4-416e-910c-08d59223bc0e": {
       "user_message_count": 1,

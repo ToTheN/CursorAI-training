@@ -2,6 +2,8 @@ import { spacing } from '../src/theme/spacing';
 import {
   HOME_HORIZONTAL_CARD_GAP,
   homeContentCardOuterWidth,
+  homeHeroPortraitHeight,
+  homeHorizontalContentWidth,
   posterFrameHeightFromOuterWidth,
   seeAllGridRowStride,
 } from '../src/utils/contentCardLayout';
@@ -32,5 +34,25 @@ describe('seeAllGridRowStride', () => {
     const outer: number = 100;
     const posterH: number = posterFrameHeightFromOuterWidth(outer);
     expect(seeAllGridRowStride(outer)).toBeGreaterThan(posterH);
+  });
+});
+
+describe('homeHorizontalContentWidth', () => {
+  it('subtracts home horizontal padding from the window', () => {
+    expect(homeHorizontalContentWidth(400)).toBe(400 - spacing.md * 2);
+  });
+});
+
+describe('homeHeroPortraitHeight', () => {
+  it('matches 2:3 when within min/max for typical phone size', () => {
+    const content: number = 360;
+    const h: number = 800;
+    const expected: number = Math.round(
+      Math.max(
+        spacing.xl * 4 + spacing.md,
+        Math.min(posterFrameHeightFromOuterWidth(content), h * 0.5, spacing.lg * 20),
+      ),
+    );
+    expect(homeHeroPortraitHeight(content, h)).toBe(expected);
   });
 });

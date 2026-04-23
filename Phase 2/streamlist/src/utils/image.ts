@@ -4,6 +4,8 @@ import { TMDB_IMAGE_BASE_URL } from '@env';
 export const IMAGE_SIZE_CAST: string = 'w185';
 /** Standard portrait content cards */
 export const IMAGE_SIZE_CARD: string = 'w342';
+/** Home hero portrait (poster) */
+export const IMAGE_SIZE_HERO: string = 'w500';
 /** Detail screen backdrop */
 export const IMAGE_SIZE_BACKDROP: string = 'w780';
 

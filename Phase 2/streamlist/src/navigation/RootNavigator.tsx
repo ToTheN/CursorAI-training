@@ -7,7 +7,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { DetailScreen } from '../screens/DetailScreen';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -16,6 +16,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
+import { useWatchlistStore } from '../store/watchlistStore';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import type { MainTabParamList, RootStackParamList } from './types';
@@ -99,18 +100,50 @@ const searchTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = 
   </TabBarAnimatedIcon>
 );
 
+const WATCHLIST_TAB_BADGE_MAX = 99;
+
+interface WatchlistTabBarIconProps {
+  color: string;
+  focused: boolean;
+  size: number;
+}
+
+function WatchlistTabBarIcon(props: WatchlistTabBarIconProps) {
+  const { color, focused, size } = props;
+  const unseenCount: number = useWatchlistStore(
+    (state) => Math.max(0, state.entries.length - state.acknowledgedCount),
+  );
+  const showBadge: boolean = !focused && unseenCount > 0;
+  const badgeLabel: string =
+    unseenCount > WATCHLIST_TAB_BADGE_MAX
+      ? `${WATCHLIST_TAB_BADGE_MAX}+`
+      : String(unseenCount);
+  return (
+    <TabBarAnimatedIcon focused={focused}>
+      <View style={styles.watchlistIconContainer}>
+        <Ionicons name="bookmark" size={size} color={color} />
+        {showBadge ? (
+          <View style={styles.watchlistTabBadge}>
+            <Text numberOfLines={1} style={styles.watchlistTabBadgeText}>
+              {badgeLabel}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    </TabBarAnimatedIcon>
+  );
+}
+
 const watchlistTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
   color,
   size,
   focused,
-}) => (
-  <TabBarAnimatedIcon focused={focused}>
-    <Ionicons
-      name={focused ? 'bookmark' : 'bookmark'}
-      size={size}
-      color={color}
-    />
-  </TabBarAnimatedIcon>
+}): React.ReactNode => (
+  <WatchlistTabBarIcon
+    color={String(color)}
+    size={size}
+    focused={focused}
+  />
 );
 
 const profileTabBarIcon: NonNullable<BottomTabNavigationOptions['tabBarIcon']> = ({
@@ -233,5 +266,30 @@ const styles = StyleSheet.create({
   tabBarIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  watchlistIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  watchlistTabBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -6,
+    minWidth: 16,
+    minHeight: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: colors.primary_container,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  watchlistTabBadgeText: {
+    color: colors.on_surface,
+    fontFamily: typography.fontFamily.interSemiBold,
+    fontSize: 9,
+    lineHeight: 11,
+    includeFontPadding: false,
+    textAlign: 'center',
   },
 });

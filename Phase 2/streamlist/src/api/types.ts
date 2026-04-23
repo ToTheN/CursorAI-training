@@ -14,6 +14,8 @@ export interface MovieListItem {
   vote_average: number;
   release_date: string;
   genre_ids: number[];
+  /** List endpoints (discover, trending) often return overview; not guaranteed on all rows. */
+  overview?: string;
 }
 
 export interface MovieSummary {

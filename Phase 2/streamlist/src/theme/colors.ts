@@ -36,4 +36,7 @@ export const colors = {
    * incorrectly dim the entire screen).
    */
   detail_back_button_android_frosted: 'rgba(42, 42, 42, 0.92)',
+
+  /** Home hero: secondary (Details) button over backdrop. */
+  hero_button_secondary: 'rgba(35, 35, 35, 0.78)',
 } as const;

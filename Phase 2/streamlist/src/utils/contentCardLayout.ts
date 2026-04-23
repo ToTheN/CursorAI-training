@@ -36,6 +36,30 @@ export function homeContentCardOuterWidth(windowWidth: number): number {
 }
 
 /**
+ * Usable content width for full-bleed Home sections (root horizontal `spacing.md` each side).
+ */
+export function homeHorizontalContentWidth(windowWidth: number): number {
+  return Math.max(0, windowWidth - spacing.md * 2);
+}
+
+/**
+ * Portrait home hero: 2:3 (same as poster) height for `contentWidth`, clamped so
+ * the banner scales on small phones but does not monopolize tall or wide viewports.
+ */
+export function homeHeroPortraitHeight(
+  contentWidth: number,
+  windowHeight: number,
+): number {
+  const fromAspect: number = posterFrameHeightFromOuterWidth(contentWidth);
+  const minH: number = spacing.xl * 4 + spacing.md;
+  const maxH: number = Math.min(
+    windowHeight * 0.5,
+    spacing.lg * 20,
+  );
+  return Math.round(Math.max(minH, Math.min(fromAspect, maxH)));
+}
+
+/**
  * Approximate height of one grid row (poster + title block + spacing) for vertical
  * infinite-scroll thresholds on the See All screen (two columns, same card width as home).
  */
