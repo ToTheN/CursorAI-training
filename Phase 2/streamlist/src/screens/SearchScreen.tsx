@@ -202,7 +202,7 @@ function SearchScreenContent(props: {
     totalResults === 0;
   const showResultCount: boolean = showSearchGrid;
   const showRecentBlock: boolean =
-    trimmed.length === 0 && !isSearchFocused && recentSearches.length > 0;
+    trimmed.length === 0 && recentSearches.length > 0;
   const featured: MovieListItem | undefined = browse.trending[0];
   const trendingRest: MovieListItem[] = browse.trending.slice(1);
   const featuredBackdropUri: string | null =
